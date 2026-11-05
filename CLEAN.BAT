@@ -1,0 +1,6 @@
+del TTALES.TEX
+del TTALES.C
+del TTALES.LOG
+del TTALES.DVI
+del TTALES.TOC
+

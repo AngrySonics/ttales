@@ -1,0 +1,26 @@
+This is TeX, C Version 3.0 (format=plain 93.1.10)  1 APR 1993 16:01
+**test
+(test.tex
+! I can't find file `cwebmac.tex'.
+l.1 \input cwebmac^^M
+                     
+Please type another input file name: ../cwebmac
+(../cwebmac.tex
+\PPbox=\box16
+\MMbox=\box17
+\MGbox=\box18
+\MODbox=\box19
+\bak=\box20
+\bakk=\box21
+\ind=\count26
+\pagewidth=\dimen16
+\pageheight=\dimen17
+\fullpageheight=\dimen18
+\pageshift=\dimen19
+\cont=\write0
+\sbox=\box22
+\lbox=\box23
+\twodigits=\count27
+) *1 [1] [2] [3] [4] Index: [5] [6] Section names: [7]
+Table of contents: (test.toc) [0] )
+Output written on test.dvi (8 pages, 20184 bytes).

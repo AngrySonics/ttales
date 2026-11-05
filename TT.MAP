@@ -1,0 +1,42 @@
+Sierra Systems LINK68  2.00  TT.OUT                       4/06/93 17:32 
+
+entry point: 00000200
+no relocation info
+executable
+
+ START      END     LENGTH    FILE            SECTION   TYPE
+
+00000000  000000ff  000100  TT.OUT           >.vectors  D 
+00000000  000000ff  000100  TTALES.O          .vectors  D 
+
+00000100  000001ff  000100  TT.OUT           >.coding   D 
+00000100  000001ff  000100  TTALES.O          .coding   D 
+
+00000200  00008567  008368  TT.OUT           >.text     T 
+00000200  0000311b  002f1c  TTALES.O          .text     T 
+0000311c  00008347  00522c  GEMS.O            .text     T 
+00008348  00008407  0000c0  div32.o           .text     T 
+00008408  00008463  00005c  mod32.o           .text     T 
+00008464  0000848b  000028  mod16.o           .text     T 
+0000848c  00008567  0000dc  memset.o          .text     T 
+
+00008568  00017393  00ee2c  TT.OUT           >.data     D 
+00008568  00017393  00ee2c  TTALES.O          .data     D 
+00017394  00017394  000000  GEMS.O            .data     D 
+00017394  00017394  000000  div32.o           .data     D 
+00017394  00017394  000000  mod32.o           .data     D 
+00017394  00017394  000000  mod16.o           .data     D 
+00017394  00017394  000000  memset.o          .data     D 
+
+00fff800  00ffff17  000718  TT.OUT           >.bss      B (00) 
+00fff800  00ffff17  000718  TTALES.O          .bss      B (00) 
+00ffff18  00ffff18  000000  GEMS.O            .bss      B (00) 
+00ffff18  00ffff18  000000  div32.o           .bss      B (00) 
+00ffff18  00ffff18  000000  mod32.o           .bss      B (00) 
+00ffff18  00ffff18  000000  mod16.o           .bss      B (00) 
+00ffff18  00ffff18  000000  memset.o          .bss      B (00) 
+
+RESERVED SYMBOLS
+
+00ffff18      heap_org
+000000e8      heap_len

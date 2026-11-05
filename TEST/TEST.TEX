@@ -1,0 +1,302 @@
+\input cwebmac
+% This file is part of Treasure Tales
+% This program by Ken Rose
+
+% Copyright (C) 1993 Sega
+% All rights reserved
+
+% Here is TeX material that gets inserted after \input webmac
+\def\pb{$\.|\ldots\.|$} % C brackets (|...|)
+\def\v{\char'174} % vertical (|) in typewriter font
+\def\dleft{[\![} \def\dright{]\!]} % double brackets
+\mathchardef\RA="3221 % right arrow
+\mathchardef\BA="3224 % double arrow
+\def\({} % kludge for alphabetizing certain section names
+
+
+\N1.  Treasure Tales Puzzle test program.
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\6
+\8\#\&{include} \.{<conio.h>}\6
+\8\#\&{include} \.{<graph.h>}\6
+\8\#\&{define} ${}\\{PutCursor}(\|a,\39\|b)\\{\_settextposition} \5(\|b,\39%
+\|a){}$\6
+\\{main} ( \&{int} \\{argc}${},{}$ \1\1 \&{char} ${}{*}\\{argv}[\,]$ ) $\{$ %
+\X2:Variables\X\X3:Program Initialization\X \&{while} (\T{1}) $\{$ \X6:Check
+and eliminate groups\X \6
+\&{if} (\\{firsttime})\5
+${}\{{}$\1\6
+${}\\{firsttime}\K\T{0};{}$\6
+${}\\{score}\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\X5:Get a legal keypress\X $\}$ $\}{}$\par
+\fi
+
+\M2. \B\X2:Variables\X${}\E{}$\6
+\&{unsigned} \&{char} \\{board}[\T{32}][\T{32}];\6
+\&{int} \\{xsize};\6
+\&{int} \\{ysize};\6
+\&{int} \\{void\_x};\6
+\&{int} \\{void\_y};\6
+\&{int} \\{in};\6
+\&{unsigned} \&{int} \\{seed};\6
+\&{int} \\{firsttime}${}\K\T{1};{}$\6
+\&{int} \\{score}${}\K\T{0}{}$;\par
+\U1.\fi
+
+\M3. \B\X3:Program Initialization\X${}\E{}$\6
+${}\{{}$\1\6
+\&{int} \|i${},{}$ \|j;\7
+\&{if} ${}(\\{argc}\I\T{3}){}$\5
+${}\{{}$\1\6
+\\{printf}(\.{"\\ntest\ <width>\ <hei}\)\.{ght>\\n\\n"});\6
+\\{exit}(\T{1});\6
+\4${}\}{}$\2\6
+${}\\{xsize}\K\\{atoi}(\\{argv}[\T{1}]);{}$\6
+${}\\{ysize}\K\\{atoi}(\\{argv}[\T{2}]);{}$\6
+\&{if} ${}(\\{xsize}>\T{32}){}$\1\5
+${}\\{xsize}\K\T{32};{}$\2\6
+\&{if} ${}(\\{ysize}>\T{32}){}$\1\5
+${}\\{ysize}\K\T{32};{}$\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{100};{}$ ${}\|i\PP){}$\1\5
+\\{printf}(\.{"\\n"});\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{ysize};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\\{xsize};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\X4:Randomizer\X\\{board}[\|j][\|i]\K(\T{7}\AND(\\{seed}\GG\T{13}))+%
+\T{1};{}$\6
+${}\\{PutCursor}(\|j+\T{1},\39\|i+\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}[\|j][\|i]);\6
+${}\\{putch}(\.{'A'}-\T{1}+\\{board}[\|j][\|i]);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{do}\6
+${}\{{}$\1\6
+${}\X4:Randomizer\X\\{void\_x}\K\T{31}\AND(\\{seed}\GG\T{11});{}$\6
+\4${}\}{}$\2\6
+\&{while} ${}(\\{void\_x}\G\\{xsize});{}$\6
+\&{do}\6
+${}\{{}$\1\6
+${}\X4:Randomizer\X\\{void\_y}\K\T{31}\AND(\\{seed}\GG\T{11});{}$\6
+\4${}\}{}$\2\6
+\&{while} ${}(\\{void\_y}\G\\{ysize});{}$\6
+${}\\{board}[\\{void\_x}][\\{void\_y}]\K\T{0};{}$\6
+${}\\{PutCursor}(\\{void\_x}+\T{1},\39\\{void\_y}+\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}[\\{void\_x}][\\{void\_y}]);\6
+\\{putch}(\.{'\ '});\6
+${}\\{PutCursor}(\\{void\_x}+\T{1},\39\\{void\_y}+\T{1});{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M4. \B\X4:Randomizer\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{seed}\K\\{seed}*\T{521}+\T{40001};{}$\6
+\4${}\}{}$\2\par
+\Us3\ET6.\fi
+
+\M5. \B\X5:Get a legal keypress\X${}\E{}$\6
+${}\{{}$\1\6
+\&{int} \\{done}${}\K\T{0};{}$\7
+\&{do}\6
+${}\{{}$\1\6
+\&{switch} ${}(\\{in}\K\\{getch}(\,)){}$\5
+${}\{{}$\1\6
+\4\&{case} \.{'i'}:\6
+\&{if} ${}(\\{void\_y}\E\T{0}){}$\1\5
+\&{break};\2\6
+${}\\{board}[\\{void\_x}][\\{void\_y}]\K\\{board}[\\{void\_x}][\\{void\_y}-%
+\T{1}];{}$\6
+${}\\{board}[\\{void\_x}][\\{void\_y}-\T{1}]\K\T{0};{}$\6
+${}\\{PutCursor}(\\{void\_x}+\T{1},\39\\{void\_y}+\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}[\\{void\_x}][\\{void\_y}]);\6
+${}\\{putch}(\.{'A'}-\T{1}+\\{board}[\\{void\_x}][\\{void\_y}]);{}$\6
+${}\\{PutCursor}(\\{void\_x}+\T{1},\39\\{void\_y}-\T{1}+\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}[\\{void\_x}]${}[\\{void\_y}-%
+\T{1}]);{}$\6
+\\{putch}(\.{'\ '});\6
+${}\\{PutCursor}(\\{void\_x}+\T{1},\39\\{void\_y}-\T{1}+\T{1});{}$\6
+${}\\{void\_y}\MM;{}$\6
+${}\\{done}\K\T{1};{}$\6
+\&{break};\6
+\4\&{case} \.{'j'}:\6
+\&{if} ${}(\\{void\_x}\E\T{0}){}$\1\5
+\&{break};\2\6
+${}\\{board}[\\{void\_x}][\\{void\_y}]\K\\{board}[\\{void\_x}-\T{1}][\\{void%
+\_y}];{}$\6
+${}\\{board}[\\{void\_x}-\T{1}][\\{void\_y}]\K\T{0};{}$\6
+${}\\{PutCursor}(\\{void\_x}+\T{1},\39\\{void\_y}+\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}[\\{void\_x}][\\{void\_y}]);\6
+${}\\{putch}(\.{'A'}-\T{1}+\\{board}[\\{void\_x}][\\{void\_y}]);{}$\6
+${}\\{PutCursor}(\\{void\_x}-\T{1}+\T{1},\39\\{void\_y}+\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}${}[\\{void\_x}-\T{1}][\\{void%
+\_y}]);{}$\6
+\\{putch}(\.{'\ '});\6
+${}\\{PutCursor}(\\{void\_x}-\T{1}+\T{1},\39\\{void\_y}-\T{1}+\T{1});{}$\6
+${}\\{void\_x}\MM;{}$\6
+${}\\{done}\K\T{1};{}$\6
+\&{break};\6
+\4\&{case} \.{'l'}:\6
+\&{if} ${}(\\{void\_x}\E\\{xsize}-\T{1}){}$\1\5
+\&{break};\2\6
+${}\\{board}[\\{void\_x}][\\{void\_y}]\K\\{board}[\\{void\_x}+\T{1}][\\{void%
+\_y}];{}$\6
+${}\\{board}[\\{void\_x}+\T{1}][\\{void\_y}]\K\T{0};{}$\6
+${}\\{PutCursor}(\\{void\_x}+\T{1},\39\\{void\_y}+\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}[\\{void\_x}][\\{void\_y}]);\6
+${}\\{putch}(\.{'A'}-\T{1}+\\{board}[\\{void\_x}][\\{void\_y}]);{}$\6
+${}\\{PutCursor}(\\{void\_x}+\T{1}+\T{1},\39\\{void\_y}+\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}${}[\\{void\_x}+\T{1}][\\{void%
+\_y}]);{}$\6
+\\{putch}(\.{'\ '});\6
+${}\\{PutCursor}(\\{void\_x}+\T{1},\39\\{void\_y}+\T{1});{}$\6
+${}\\{void\_x}\PP;{}$\6
+${}\\{done}\K\T{1};{}$\6
+\&{break};\6
+\4\&{case} \.{'m'}:\5
+\&{case} \.{'k'}:\6
+\&{if} ${}(\\{void\_y}\E\\{ysize}-\T{1}){}$\1\5
+\&{break};\2\6
+${}\\{board}[\\{void\_x}][\\{void\_y}]\K\\{board}[\\{void\_x}][\\{void\_y}+%
+\T{1}];{}$\6
+${}\\{board}[\\{void\_x}][\\{void\_y}+\T{1}]\K\T{0};{}$\6
+${}\\{PutCursor}(\\{void\_x}+\T{1},\39\\{void\_y}+\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}[\\{void\_x}][\\{void\_y}]);\6
+${}\\{putch}(\.{'A'}-\T{1}+\\{board}[\\{void\_x}][\\{void\_y}]);{}$\6
+${}\\{PutCursor}(\\{void\_x}+\T{1},\39\\{void\_y}+\T{1}+\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}[\\{void\_x}]${}[\\{void\_y}+%
+\T{1}]);{}$\6
+\\{putch}(\.{'\ '});\6
+${}\\{PutCursor}(\\{void\_x}+\T{1},\39\\{void\_y}+\T{1}+\T{1});{}$\6
+${}\\{void\_y}\PP;{}$\6
+${}\\{done}\K\T{1};{}$\6
+\&{break};\6
+\4\&{case} \.{'q'}:\6
+\&{for} ${}(\\{done}\K\T{0};{}$ ${}\\{done}<\T{100};{}$ ${}\\{done}\PP){}$\1\5
+\\{printf}(\.{"\\n"});\2\6
+\\{exit}(\T{0});\6
+\4\&{default}:\5
+\&{break};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\&{while} ${}(\R\\{done});{}$\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M6. This is the heart of the gameplay, separating this puzzle from the ones we
+played with in grade school.  In this version we will eliminate only
+rectangular groups, as edge-connected groups are a pain to identify correctly.
+Groups of four or more squares of the same color are eliminated from the
+playfield.  The squares above them drop down (the void retains its position)
+and the empty area is filled with random stuff.  Then we scan the whole thing
+again until there are no more groups removed.
+
+\Y\B\4\X6:Check and eliminate groups\X${}\E{}$\6
+$\{$ \&{int} \|x${},{}$ \|y${},{}$ \\{color}${},{}$ \\{xcount}${},{}$ %
+\\{ycount};\6
+\&{int} \|a${},{}$ \|b${},{}$ \|c; \&{for} ${}(\|y\K\T{0};{}$ ${}\|y<%
+\\{ysize};{}$ ${}\|y\PP)$ $\{$ \&{for} ${}(\|x\K\T{0};{}$ ${}\|x<\\{xsize};{}$
+${}\|x\PP)$ $\{$ $\\{color}\K\\{board}[\|x][\|y];$ \&{if} ${}((\\{board}[\|x][%
+\|y+\T{1}]\E\\{color})\W(\\{board}[\|x][\|y+\T{2}]\E\\{color})\W(\\{board}[\|x+%
+\T{1}][\|y+\T{0}]\E\\{color})\W(\\{board}[\|x+\T{1}][\|y+\T{1}]\E\\{color})\W(%
+\\{board}[\|x+\T{1}][\|y+\T{2}]\E\\{color}))$ $\{$ \&{for} ${}(\|a\K\T{0};{}$
+${}\|a<\T{2};{}$ ${}\|a\PP)$ $\{$ \&{for} ${}(\|c\K\T{0};{}$ ${}\|c<\T{3};{}$
+${}\|c\PP)$ $\{$ \6
+\&{for} ${}(\|b\K\|y-\T{1}+\|c;{}$ ${}\|b\G\T{0};{}$ ${}\|b\MM){}$\5
+${}\{{}$\1\6
+${}\\{board}[\|x+\|a][\|b+\T{1}]\K\\{board}[\|x+\|a][\|b];{}$\6
+${}\\{PutCursor}(\|x+\|a+\T{1},\39\|b+\T{1}+\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}${}[\|x+\|a][\|b+\T{1}]);{}$\6
+${}\\{putch}(\.{'A'}-\T{1}+\\{board}[\|x+\|a][\|b+\T{1}]);{}$\6
+\4${}\}{}$\2\6
+${}\X4:Randomizer\X\\{board}[\|x+\|a][\T{0}]\K(\T{7}\AND(\\{seed}\GG\T{13}))+%
+\T{1};{}$\6
+${}\\{PutCursor}(\|x+\|a+\T{1},\39\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}${}[\|x+\|a][\T{0}]);{}$\6
+${}\\{putch}(\.{'A'}-\T{1}+\\{board}[\|x+\|a][\T{0}]);$ \X7:Try to move the
+cursor's column down\X $\}$ $\}$ $\|x\K\\{xsize};{}$\6
+${}\|y\K{-}\T{1};$ $\}$ \&{if} ${}((\\{board}[\|x][\|y+\T{1}]\E\\{color})\W(%
+\\{board}[\|x+\T{1}][\|y+\T{0}]\E\\{color})\W(\\{board}[\|x+\T{1}][\|y+\T{1}]\E%
+\\{color})\W(\\{board}[\|x+\T{2}][\|y+\T{0}]\E\\{color})\W(\\{board}[\|x+%
+\T{2}][\|y+\T{1}]\E\\{color}))$ $\{$ \&{for} ${}(\|a\K\T{0};{}$ ${}\|a<%
+\T{3};{}$ ${}\|a\PP)$ $\{$ \&{for} ${}(\|c\K\T{0};{}$ ${}\|c<\T{2};{}$ ${}\|c%
+\PP)$ $\{$ \6
+\&{for} ${}(\|b\K\|y-\T{1}+\|c;{}$ ${}\|b\G\T{0};{}$ ${}\|b\MM){}$\5
+${}\{{}$\1\6
+${}\\{board}[\|x+\|a][\|b+\T{1}]\K\\{board}[\|x+\|a][\|b];{}$\6
+${}\\{PutCursor}(\|x+\|a+\T{1},\39\|b+\T{1}+\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}${}[\|x+\|a][\|b+\T{1}]);{}$\6
+${}\\{putch}(\.{'A'}-\T{1}+\\{board}[\|x+\|a][\|b+\T{1}]);{}$\6
+\4${}\}{}$\2\6
+${}\X4:Randomizer\X\\{board}[\|x+\|a][\T{0}]\K(\T{7}\AND(\\{seed}\GG\T{13}))+%
+\T{1};{}$\6
+${}\\{PutCursor}(\|x+\|a+\T{1},\39\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}${}[\|x+\|a][\T{0}]);{}$\6
+${}\\{putch}(\.{'A'}-\T{1}+\\{board}[\|x+\|a][\T{0}]);$ \X7:Try to move the
+cursor's column down\X $\}$ $\}$ $\|x\K\\{xsize};{}$\6
+${}\|y\K{-}\T{1};$ $\}$ $\}$ $\}$ $\\{PutCursor}(\\{void\_x}+\T{1},\39\\{void%
+\_y}+\T{1});$ $\}{}$\par
+\U1.\fi
+
+\M7. \B\X7:Try to move the cursor's column down\X${}\E{}$\6
+\&{if} ${}((\|x+\|a\E\\{void\_x})\W(\|y>\\{void\_y})){}$\5
+${}\{{}$\1\6
+${}\\{board}[\|x+\|a][\|y]\K\\{board}[\|x+\|a][\|y-\T{1}];{}$\6
+${}\\{PutCursor}(\|x+\|a+\T{1},\39\|y+\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}${}[\|x+\|a][\|y]);{}$\6
+${}\\{putch}(\.{'A'}-\T{1}+\\{board}[\|x+\|a][\|y]);{}$\6
+${}\\{board}[\\{void\_x}][\\{void\_y}]\K\T{0};{}$\6
+${}\\{PutCursor}(\\{void\_x}+\T{1},\39\\{void\_y}+\T{1});{}$\6
+\\{\_settextcolor}((\&{short}) \\{board}[\\{void\_x}][\\{void\_y}]);\6
+\\{putch}(\.{'\ '});\6
+\4${}\}{}$\2\par
+
+\U6.\fi
+
+
+\inx
+\I\\{\_settextcolor}, 3, 5, 6, 7.
+\I\\{\_settextposition}, 1.
+\I\|{a}, \[6].
+\I\\{argc}, \[1], 3.
+\I\\{argv}, \[1], 3.
+\I\\{atoi}, 3.
+\I\|{b}, \[6].
+\I\\{board}, \[2], 3, 5, 6, 7.
+\I\|{c}, \[6].
+\I\\{color}, \[6].
+\I\\{done}, \[5].
+\I\\{exit}, 3, 5.
+\I\\{firsttime}, 1, \[2].
+\I\\{getch}, 5.
+\I\|{i}, \[3].
+\I\\{in}, \[2], 5.
+\I\|{j}, \[3].
+\I\\{main}, 1.
+\I\\{printf}, 3, 5.
+\I\\{putch}, 3, 5, 6, 7.
+\I\\{PutCursor}, \[1], 3, 5, 6, 7.
+\I\\{score}, 1, \[2].
+\I\\{seed}, \[2], 3, 4, 6.
+\I\\{void\_x}, \[2], 3, 5, 6, 7.
+\I\\{void\_y}, \[2], 3, 5, 6, 7.
+\I\|{x}, \[6].
+\I\\{xcount}, \[6].
+\I\\{xsize}, \[2], 3, 5, 6.
+\I\|{y}, \[6].
+\I\\{ycount}, \[6].
+\I\\{ysize}, \[2], 3, 5, 6.
+\fin
+\I\X6:Check and eliminate groups\X
+\U1.
+\I\X5:Get a legal keypress\X
+\U1.
+\I\X3:Program Initialization\X
+\U1.
+\I\X4:Randomizer\X
+\Us3\ET6.
+\I\X7:Try to move the cursor's column down\X
+\U6.
+\I\X2:Variables\X
+\U1.
+\con

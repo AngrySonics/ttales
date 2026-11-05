@@ -1,0 +1,82 @@
+
+@ @<Draw a slice of square@>=
+  k = 2*x-y+z;
+  j = k>>3;
+/*k &= 0x3;*/
+  k = (k >> 1)&3;
+  l = y-z;
+  i = l>>1;
+  l &= 0x1;
+  if((i >= 0) && (j >= 0) && pathMap[i*mapWidth+j].type)
+    @<Draw a cell in the current square@>@;
+
+@ @<Draw a cell in the current square@>=
+{
+  if(l){
+    switch(k){
+      case 0:
+        colUpdateBufferA[a] = 1;
+        break;
+      case 1:
+        colUpdateBufferA[a] = 2;
+        break;
+      case 2:
+        colUpdateBufferA[a] = 2;
+        break;
+      case 3:
+        colUpdateBufferB[a] = 2;
+        break;
+    }
+  } else {
+    switch(k){
+      case 0:
+        colUpdateBufferA[a] = 4;
+        break;
+      case 1:
+        colUpdateBufferA[a] = 5;
+        break;
+      case 2:
+        colUpdateBufferB[a] = 6;
+        break;
+      case 3:
+        colUpdateBufferB[a] = 6;
+        break;
+    }
+  }
+}
+
+@ @<Draw a cell in the previous square@>=
+{
+  if(l){
+    switch(k){
+      case 0:
+        colUpdateBufferA[a] = 1;
+        break;
+      case 1:
+        colUpdateBufferA[a] = 2;
+        break;
+      case 2:
+        colUpdateBufferA[a] = 2;
+        break;
+      case 3:
+        colUpdateBufferB[a] = 2;
+        break;
+    }
+  } else {
+    switch(k){
+      case 0:
+        colUpdateBufferA[a] = 4;
+        break;
+      case 1:
+        colUpdateBufferA[a] = 5;
+        break;
+      case 2:
+        colUpdateBufferB[a] = 6;
+        break;
+      case 3:
+        colUpdateBufferB[a] = 6;
+        break;
+    }
+  }
+}
+

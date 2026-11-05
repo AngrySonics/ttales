@@ -1,0 +1,4 @@
+\catcode `\@=11\relax 
+\Z { Treasure Tales Puzzle test program}{1}{1}
+
+\catcode `\@=12\relax 

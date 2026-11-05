@@ -1,0 +1,677 @@
+
+@* Co\"ordinate System Transformations.
+
+@^Co\"ordinate transforms@>
+To produce a VDP address from a square coordinate, we apply several
+transforms.  Before we begin, let me define a few things.  Square coordinates
+originate in the lower left, with $j$ increasing horizontally to the right,
+and $i$ increasing diagonally to the upper right.  Cell coordinates also
+originate in the lower left, with $x$ increasing to the right, but $y$
+increases straight up, rather than diagonally.  The mapping between them is
+defined by:$$x=4\cdot j + i$$ $$y = 2\cdot i + z$$The display
+screen
+has its vertical coordinate flipped.  The mapping from cell coordinates to
+screen
+coordinates is:$$\alpha=x$$ $$\beta=y_{max}-y$$From screen coordinates to
+VDP coordinates is:$$\theta=\alpha\bmod 64$$ $$\phi=\beta\bmod 32$$The final
+conversion is to a VDP address, as follows:$$addr=ScreenBase+128\phi+2\theta$$
+Substitution doesn't really gain anything in terms of efficiency, so we
+calculate as outlined above.  The values $\theta$ and $\phi$ are useful, while
+we are drawing squares, to determine whether we have crossed the screen wrap
+point in any direction as we draw these extended objects.
+
+The conversion to screen pixel coordinates simply involves multiplying the
+screen coordinates by eight. $$\alpha_p=8\cdot\alpha$$ $$\beta_p=8\cdot\beta$$
+To go on to an actual sprite position,  $$h=\alpha_p-S_x+128$$
+$$v=\beta_p-S_y+128+7$$
+Where $S_x$ and $S_y$ are the screen fine scroll settings.
+
+Finally, adjust for the sprite's registration requirements.
+
+Inverting the mapping, in order to recover a square coordinate from a cell
+coordinate, is complicated by the presence of the |z| value for squares.
+Ignoring that, we can map back with reasonable ease.
+With |z| included, the
+equations are not completely solvable.  We get $$j=(2x-y+z)/8$$ $$i=(y-z)/2$$but
+we need to check the map for all `possible' |z| to see what is really there.
+
+@* Gameplay---Paths.  This is the core of the game play in \TT.  A path
+consists of an array of squares, each of which can be one of a number of types,
+and each also has an elevation.  The characters move about in a quantized
+fashion on this grid.
+
+@ This procedure loads the VDP, expands the compressed level data, prepares the
+enemies that are present in this level, fills the display screen, and otherwise
+gets things ready to run.
+
+@d DATA_COMPRESSED 0
+
+@c
+void InitPath(){
+int i, j;
+unsigned char *buffer;
+unsigned short *bufferA;
+unsigned short *bufferB;
+
+#if DATA_COMPRESSED
+  buffer = (unsigned char *)AllocMem(4096);
+  ExpandLZ(currentPath->artSet->data, buffer);
+  SendBlock32(buffer, FG_CELLS, 4096);
+  WaitTOF();
+  FreeMem(buffer);
+#else
+  SendBlock32(currentPath->artSet->data, FG_CELLS, 4096);
+  WaitTOF();
+#endif
+  SendBlock32(digitData, 0xf000, 4096);
+  @<Unpack and prepare the path map@>@;
+  @<Place the player@>@;
+  SendBlock32(milescells, 768*32, 4096);
+  @<Fill up the screen@>@;
+  FadeIn(currentPath->artSet->palette, 32);
+}
+
+@ @<Place the player@>=
+  currentPlayer->xPosition = currentPath->xStart;
+  currentPlayer->yPosition = currentPath->yStart;
+  currentPlayer->chBase = 0xa300;
+  currentPlayer->Frame = milesshape;
+  currentPlayer->anim_next = MilesStandEast;
+  currentPlayer->xOffset = 0;
+  currentPlayer->yOffset = 0;
+  currentPlayer->counter = 0;
+  currentPlayer->Frame = milesshape;
+  currentPlayer->anim_time = 0;
+  currentPlayer->behavior = 0;
+  currentPlayer->type = 1;
+
+@ @<Unpack and prepare the path map@>=
+  pathMap = currentPath->map;
+  screenScrollY = 800;
+  screenScrollX = 0;
+
+@ @<Global...@>=
+PathPtr currentPath;
+SquarePtr pathMap;
+int mapWidth;
+short rowOffsets[64];
+
+@ @sSquare int
+@s SquarePtr int
+
+@<Typedef...@>=
+typedef struct square_t{
+short type;
+short elevation;
+}Square, *SquarePtr;
+
+@ @<Fill up the screen@>=
+  @<Allocate and clear some temporary screen buffers@>@;
+  @<Fill up the buffers with squares@>@;
+  @<Request transfer of screen data@>@;
+  WaitTOF();
+  @<Free the temporary screen buffers@>@;
+
+@ @<Allocate and clear some temporary screen buffers@>=
+  bufferA = (unsigned short *)AllocMem(2*32*64);
+  memset(bufferA, 0, 2*32*64);
+  bufferB = (unsigned short *)AllocMem(2*32*64);
+  memset(bufferB, 0, 2*32*64);
+
+@ @<Fill up the buffers with squares@>=
+  mapWidth = currentPath->xSize;
+  j = 0;
+  for(i = 0; i < currentPath->ySize; i++){
+    rowOffsets[i] = j;
+    j += mapWidth;
+  }
+  for(i = 13; i >= 0; i--)
+    for(j = 0; j < 11; j++)@/
+      if(pathMap[SquareLocation(j, i)].type)
+        @<Draw a square at square coordinate $[j, i]$@>@;
+
+@ This section draws a square into the pseudo-vdp.  For details of the
+coordinate transformations, see {\bf Co\"ordinate system
+transformations}.@^Co\"ordinate transforms@>
+
+@d yMax (4*32-1)
+@d SquareLocation(x, y) (rowOffsets[y] + x)
+
+@<Draw a square at square coordinate $[j, i]$@>=
+{
+  unsigned short *ba, *bb;
+  int y, alpha, beta, theta, phi, offset;
+
+  y = (i << 1);
+  alpha = (j << 2) + i;
+  y += pathMap[SquareLocation(j, i)].elevation;
+  beta = yMax - y;
+  theta = alpha % 64;
+  phi = beta % 32;
+  offset = 64 * phi + theta;    /* half because this is a word address */
+  offset += 64;                 /* to get the face of the square */
+  ba = bufferA + offset;
+  bb = bufferB + offset;
+  switch(theta){
+    case 63:
+      @<Draw a block with the screen wrap at cell 1@>@;
+      break;
+    case 62:
+      @<Draw a block with the screen wrap at cell 2@>@;
+      break;
+    case 61:
+      @<Draw a block with the screen wrap at cell 3@>@;
+      break;
+    case 60:
+      @<Draw a block with the screen wrap at cell 4@>@;
+      break;
+    default:
+      @<Draw a block normally@>@;
+      break;
+  }
+}
+
+@ @<Draw a block normally@>=
+  bb[0] = 0x0007;
+  bb[1] = 0x0007;
+  bb[2] = 0x0007;
+  bb[3] = 0x0007;
+  bb[4] = 0x0008;
+  ba -= 64;
+  bb -= 64;
+  ba[0] = 0x0004;
+  ba[1] = 0x0005;
+  bb[2] = 0x0005;
+  bb[3] = 0x0005;
+  bb[4] = 0x0006;
+  ba -= 64;
+  bb -= 64;
+  ba[0] = 0x0001;
+  ba[1] = 0x0002;
+  ba[2] = 0x0002;
+  bb[3] = 0x0002;
+  bb[4] = 0x0003;
+
+@ @<Draw a block with the screen wrap at cell 1@>=
+  bb[0] = 0x0007;
+  bb[1-64] = 0x0007;
+  bb[2-64] = 0x0007;
+  bb[3-64] = 0x0007;
+  bb[4-64] = 0x0008;
+  ba -= 64;
+  bb -= 64;
+  ba[0] = 0x0004;
+  ba[1-64] = 0x0005;
+  bb[2-64] = 0x0005;
+  bb[3-64] = 0x0005;
+  bb[4-64] = 0x0006;
+  ba -= 64;
+  bb -= 64;
+  ba[0] = 0x0001;
+  ba[1-64] = 0x0002;
+  ba[2-64] = 0x0002;
+  ba[3-64] = 0x0002;
+  bb[4-64] = 0x0003;
+
+@ @<Draw a block with the screen wrap at cell 2@>=
+  bb[0] = 0x0007;
+  bb[1] = 0x0007;
+  bb[2-64] = 0x0007;
+  bb[3-64] = 0x0007;
+  bb[4-64] = 0x0008;
+  ba -= 64;
+  bb -= 64;
+  ba[0] = 0x0004;
+  ba[1] = 0x0005;
+  bb[2-64] = 0x0005;
+  bb[3-64] = 0x0005;
+  bb[4-64] = 0x0006;
+  ba -= 64;
+  bb -= 64;
+  ba[0] = 0x0001;
+  ba[1] = 0x0002;
+  ba[2-64] = 0x0002;
+  ba[3-64] = 0x0002;
+  bb[4-64] = 0x0003;
+
+@ @<Draw a block with the screen wrap at cell 3@>=
+  bb[0] = 0x0007;
+  bb[1] = 0x0007;
+  bb[2] = 0x0007;
+  bb[3-64] = 0x0007;
+  bb[4-64] = 0x0008;
+  ba -= 64;
+  bb -= 64;
+  ba[0] = 0x0004;
+  ba[1] = 0x0005;
+  bb[2] = 0x0005;
+  bb[3-64] = 0x0005;
+  bb[4-64] = 0x0006;
+  ba -= 64;
+  bb -= 64;
+  ba[0] = 0x0001;
+  ba[1] = 0x0002;
+  ba[2] = 0x0002;
+  ba[3-64] = 0x0002;
+  bb[4-64] = 0x0003;
+
+@ @<Draw a block with the screen wrap at cell 4@>=
+  bb[0] = 0x0007;
+  bb[1] = 0x0007;
+  bb[2] = 0x0007;
+  bb[3] = 0x0007;
+  bb[4-64] = 0x0009;
+  ba -= 64;
+  bb -= 64;
+  ba[0] = 0x0004;
+  ba[1] = 0x0005;
+  bb[2] = 0x0005;
+  bb[3] = 0x0005;
+  bb[4-64] = 0x0006;
+  ba -= 64;
+  bb -= 64;
+  ba[0] = 0x0001;
+  ba[1] = 0x0002;
+  ba[2] = 0x0002;
+  ba[3] = 0x0002;
+  bb[4-64] = 0x0003;
+
+@ @<Request transfer of screen data@>=
+  SendBlock32(bufferA, FG, 2*32*64);
+  SendBlock32(bufferB, BG, 2*32*64);
+
+@ @<Free the temporary screen buffers@>=
+  FreeMem(bufferA);
+  FreeMem(bufferB);
+
+@ This procedure is the core of the path gameplay.
+
+@c
+void RunPath(){
+  sprite = 0;
+  @<Update the player@>@;
+  @<Update enemies@>@;
+  @<Update screen@>@;
+  ReadControllers(&bStick1);
+  @<Terminate the sprite list@>@;
+  WaitTOF();
+}
+
+@ @<Update the player@>=
+  @<Move the player@>@;
+  @<Draw the player@>@;
+
+@ @<Draw the player@>=
+  AnimateCreature(currentPlayer);
+  DrawCreatures(currentPlayer);
+  SendSpriteControl(spriteAttributes);
+
+@ @<Update enemies@>=
+
+@ @<Update screen@>=
+  SendScrolls(screenScrollY, screenScrollY, -screenScrollX, -screenScrollX);
+  {
+    short oldX = screenScrollX;
+    short oldY = screenScrollY;
+
+    @<Do screen fine scroll as necessary@>@;
+    @<Do screen coarse scroll as necessary@>@;
+  }
+
+@ @<Do screen fine scroll as necessary@>=
+  @<Check for screen normal scroll@>@;
+  @<Check for screen quick scroll@>@;
+  @<Limit screen scrolling@>@;
+
+@ If the player is out of position, fine scroll the screen to bring him back.
+
+@<Check for screen normal scroll@>=
+  if(playerY > 0xff) screenScrollY++;
+  if(playerY < 0xff) screenScrollY--;
+  if(playerX > 0x101) screenScrollX++;
+  if(playerX > 0x100) screenScrollX++;
+  if(playerX < 0x0ff) screenScrollX--;
+  if(playerX < 0x100) screenScrollX--;
+
+@ If the player is more than 24 pixels out of position vertically, or 40 pixels
+horizontally, do a double-speed scroll.
+
+@<Check for screen quick scroll@>=
+  if(playerY > 0x117) screenScrollY++;
+  if(playerY < 0xe7) screenScrollY--;
+  if(playerX > 0x128) screenScrollX += 2;
+  if(playerX < 0x0d8) screenScrollX -= 2;
+
+@ As the screen reaches the edges of the world, we need to be sure that we
+don't fall off.
+
+@<Limit screen scrolling@>=
+  if(screenScrollX < 0) screenScrollX = 0;
+  if(screenScrollX > 7*40*8) screenScrollX = 7*40*8;
+  if(screenScrollY < 0) screenScrollY = 0;
+  if(screenScrollY > (yMax*8-216)) screenScrollY = (yMax*8-216);
+
+@ @<Global...@>=
+SpriteDef spriteAttributes[80];
+short sprite;
+short screenScrollX;
+short screenScrollY;
+short playerX;
+short playerY;
+
+@ This structure complies with the Genesis hardware sprite control block.
+
+@s SpriteDef int
+@s SpriteDefPtr int
+
+@<Typedef...@>=
+typedef struct {
+  unsigned short vp;
+  unsigned char size;
+  unsigned char link;
+  unsigned short cell;
+  unsigned short hp;
+}SpriteDef, *SpriteDefPtr;
+
+@ As the fine scroll crosses certain boundaries, it becomes necessary to add
+cells along the edges of the display.  This section determines when that is
+needed and performs the update.
+
+@<Do screen coarse scroll as necessary@>=
+{
+  short target;
+
+  @<Add a column on the right, if needed@>@;
+  @<Add a column on the left, if needed@>@;
+  @<Add a row on the top, if needed@>@;
+  @<Add a row on the bottom, if needed@>@;
+}
+
+@ @<Add a column on the right, if needed@>=
+  if(((oldX ^screenScrollX) & 0x8) && (screenScrollX > oldX))
+    @<Add a new column on the right@>@;
+
+@ @<Add a column on the left, if needed@>=
+  if(((oldX ^screenScrollX) & 0x8) && (screenScrollX < oldX))
+    @<Add a new column on the left@>@;
+
+@ @<Add a row on the top, if needed@>=
+  if(((oldY ^screenScrollY) & 0x8) && (screenScrollY < oldY))
+    @<Add a new row on the top@>@;
+
+@ @<Add a row on the bottom, if needed@>=
+  if(((oldY ^screenScrollY) & 0x8) && (screenScrollY > oldY))
+    @<Add a new row on the bottom@>@;
+
+@ These buffers are used to construct new rows and columns for screen coarse
+scroll updates.  We need them both because we might have to do a vertical and
+horizontal update simultaneously.
+
+@<Global...@>=
+short lineUpdateBufferA[64];
+short colUpdateBufferA[32];
+short lineUpdateBufferB[64];
+short colUpdateBufferB[32];
+
+@ @<Add a new column on the right@>=
+{
+  short column = screenScrollX+320;
+
+  BuildNewColumn(column);
+  target = (column >> 2) & 126;
+  SendColumn(&colUpdateBufferA, target + FG);
+  SendColumn(&colUpdateBufferB, target + BG);
+}
+
+@ @<Add a new column on the left@>=
+{
+  short column = screenScrollX-8;
+
+  BuildNewColumn(column);
+  target = (column >> 2) & 126;
+  SendColumn(&colUpdateBufferA, target + FG);
+  SendColumn(&colUpdateBufferB, target + BG);
+}
+
+@ @<Add a new row on the top@>=
+{
+  short column = screenScrollX-8;
+  short row = screenScrollY;
+
+  BuildNewRow(row, column);
+  target = (((screenScrollY) >> 3) * 128) & 4095;
+  SendBlock32(&lineUpdateBufferA, target+FG, 128);
+  SendBlock32(&lineUpdateBufferB, target+BG, 128);
+}
+
+@ @<Add a new row on the bottom@>=
+{
+  short column = screenScrollX-8;
+  short row = screenScrollY + 232;
+
+  BuildNewRow(row, column);
+  target = (((screenScrollY+232) >> 3) * 128) & 4095;
+  SendBlock32(&lineUpdateBufferA, target+FG, 128);
+  SendBlock32(&lineUpdateBufferB, target+BG, 128);
+}
+
+@ These procedures construct a new row or column for dispatch to the VDP.
+
+@c
+void BuildNewColumn(short column)
+  @<Build the new column@>@;
+
+void BuildNewRow(short row, short column)
+  @<Build the new row@>@;
+
+@ @<Function prototypes@>=
+void BuildNewRow(short row, short column);
+void BuildNewColumn(short column);
+
+@ @<Build the new column@>=
+{
+  short i, j;
+  short a;
+  short e;      /* edge flag */
+  short y = yMax - ((screenScrollY - 8) >> 3);
+  short b = 31 - (y % 32);
+  short x = column >> 3;
+  short z;
+  short k, l;
+  short ua, ub;
+  short ch;
+  SquarePtr currentSquare;
+
+  for(a = b; a < 32; a++){
+    ua = 0;
+    ub = 0;
+    @<Draw a slice of square@>@;
+    colUpdateBufferA[a] = ua;
+    colUpdateBufferB[a] = ub;
+    y--;
+  }
+  for(a = 0; a < b; a++){
+    ua = 0;
+    ub = 0;
+    @<Draw a slice of square@>@;
+    colUpdateBufferA[a] = ua;
+    colUpdateBufferB[a] = ub;
+    y--;
+  }
+}
+
+@ @<Build the new row@>=
+{
+  short i, j;
+  short a;
+  short e;      /* edge flag */
+  short y = yMax - (row >> 3);
+  short x = column >> 3;
+  short b = x % 64;
+  short z = 30;
+  short k, l;
+  short ua, ub;
+  short ch;
+  SquarePtr currentSquare;
+
+  for(a = b; a < 64; a++){
+    ua = 0;
+    ub = 0;
+    @<Draw a slice of square@>@;
+    lineUpdateBufferA[a] = ua;
+    lineUpdateBufferB[a] = ub;
+    x++;
+  }
+  for(a = 0; a < b; a++){
+    ua = 0;
+    ub = 0;
+    @<Draw a slice of square@>@;
+    lineUpdateBufferA[a] = ua;
+    lineUpdateBufferB[a] = ub;
+    x++;
+  }
+}
+
+@ @<Draw a slice of square@>=
+  @<Determine the square corresponding to the cell@>@;
+  if(z >= -11)
+    @<Determine the forward graphic element in each playfield@>@;
+
+@ Given |x| and |y| in screen coordinates, this section produces |i| and |j|,
+the associated square coordinates.  It also calculates |e|, a value that is
+zero at the left edge of a square.  When we draw the left edge, we
+also need to draw the right edge of the square to the left.
+
+@<Determine the square corresponding to the cell@>=
+  if(z < 0) z = 0;
+  for(z = z+1; z >= -11; z--){
+    j = (2 * x - y+1+z) >> 3;
+    i = (y - z) >> 1;
+    e = x - (4*j+i);
+    currentSquare = &pathMap[SquareLocation(j, i)];
+    if(z > currentSquare->elevation){
+      if(j == 0) continue;
+      if((z > pathMap[SquareLocation(j, i)-1].elevation) || (x-(4*(j-1)+i) > 4)){
+#if 1
+        if((z <= pathMap[SquareLocation(j-1, i+1)].elevation) && (x-(4*(j-1)+i+1) <= 4)){
+          j--;
+          i++;
+          currentSquare = &pathMap[SquareLocation(j, i)];
+          if(!currentSquare->type) continue;
+          e = x - (4*j+i);
+          if((i >= 0) && (j >= 0) && (i < currentPath->ySize))
+            break;
+        }
+#endif
+        continue;
+      } else {
+        j--;
+        currentSquare = &pathMap[SquareLocation(j, i)];
+        e = x - (4*j+i);
+        if(!currentSquare->type) continue;
+        if((i >= 0) && (j >= 0) && (i < currentPath->ySize))
+          break;
+        continue;
+      }
+    }
+    if(!currentSquare->type) continue;
+    if((i >= 0) && (j >= 0) && (i < currentPath->ySize)){
+      break;
+    }
+  }
+
+@ @<Determine the forward graphic element in each playfield@>=
+{
+  int h;
+
+  @<Determine which line of the square to draw based on elevation@>@;
+  @<Draw cell from this square@>@;
+#if 1
+  if((ub == 0) && (e == 0) && (j > 0)){
+    @<Draw cell from square to left and maybe up@>@;
+  }
+#endif
+}
+
+@ @<Determine which line of the square to draw based on elevation@>=
+  h = 1 - ((y - z) & 1);
+  h += pathMap[SquareLocation(j, i)].elevation - z;
+
+@ @<Draw cell from this square@>=
+  if(pathMap[SquareLocation(j, i)].type && (i >= 0) && (j >= 0) &&
+                 (i < currentPath->ySize) && (j < mapWidth)){
+    short *pattern = l1cells[pathMap[SquareLocation(j, i)].type];
+    ch = pattern[1+h*5+e];
+    if(h < pattern[0]){
+      switch(h){
+        case 0:
+          ua = ch;
+          break;
+        case 1:
+          switch(e){
+            case 0:
+            case 1:
+              ua = ch;
+              break;
+            case 2:
+            case 3:
+            default:
+              ub = ch;
+              break;
+          }
+          break;
+        default:
+          ub = ch;
+          break;
+      }
+    }
+  }
+
+@ @<Draw cell from square to left and maybe up@>=
+  {
+    short tz = z;
+
+    @<Determine the second square corresponding to the cell@>@;
+    @<Determine which line of the square to draw based on elevation@>@;
+    if(currentSquare->type && (i >= 0) &&
+                   (i < currentPath->ySize) && (j < mapWidth)){
+      if(h < l1cells[currentSquare->type][0]){
+        ch = l1cells[currentSquare->type][1+h*5+4];
+        ub = ch;
+      }
+    }
+    z = tz;
+  }
+
+@ @<Determine the second square corresponding to the cell@>=
+  if(z < 0) z = 0;
+  for(z = z + 1; z >= -11; z--){
+    j = (2 * x - y+1+z) >> 3;
+#if 0
+    if(j >= max_j) continue;
+#else
+    j--;
+#endif
+    i = (y - z) >> 1;
+    e = x - (4*j+i);
+    currentSquare = &pathMap[SquareLocation(j, i)];
+    if(z > currentSquare->elevation){
+      if(j == 0) continue;
+      if((z <= pathMap[SquareLocation(j, i+1)].elevation) && (x-(4*j+i+1) <= 4)){
+        j--;
+        i++;
+        currentSquare = &pathMap[SquareLocation(j, i)];
+        if(!currentSquare->type) continue;
+        e = x - (4*j+i);
+        if((i >= 0) && (j >= 0) && (i < currentPath->ySize))
+          break;
+      }
+      continue;
+    }
+    if(!currentSquare->type) continue;
+    if((i >= 0) && (j >= 0) && (i < currentPath->ySize)){
+      break;
+    }
+  }
+
+

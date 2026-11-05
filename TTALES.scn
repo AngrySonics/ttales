@@ -1,0 +1,223 @@
+\I\X160:Add a column on the left, if needed\X
+\U158.
+\I\X159:Add a column on the right, if needed\X
+\U158.
+\I\X165:Add a new column on the left\X
+\U160.
+\I\X164:Add a new column on the right\X
+\U159.
+\I\X167:Add a new row on the bottom\X
+\U162.
+\I\X166:Add a new row on the top\X
+\U161.
+\I\X162:Add a row on the bottom, if needed\X
+\U158.
+\I\X161:Add a row on the top, if needed\X
+\U158.
+\I\X204:Allocate an active square record\X
+\U203.
+\I\X137:Allocate and clear some temporary screen buffers\X
+\U136.
+\I\X170:Build the new column\X
+\U168.
+\I\X171:Build the new row\X
+\U168.
+\I\X153:Check for screen normal scroll\X
+\U152.
+\I\X154:Check for screen quick scroll\X
+\U152.
+\I\X100:Clear VRAM\X
+\U98.
+\I\X101:Clear color RAM\X
+\U98.
+\I\X102:Clear vertical scroll RAM\X
+\U98.
+\I\X99:Clear work RAM\X
+\U103.
+\I\X17:Cut a chunk off the free block and prep it:mmgr\X
+\U15.
+\I\X221, 226:Data includes\X
+\U5.
+\I\X217:Determine the shape's x position\X
+\U215.
+\I\X218:Determine the shape's y position\X
+\U215.
+\I\X158:Do screen coarse scroll as necessary\X
+\U151.
+\I\X152:Do screen fine scroll as necessary\X
+\U151.
+\I\X140:Draw a block normally\X
+\U139.
+\I\X141:Draw a block with the screen wrap at cell 1\X
+\U139.
+\I\X142:Draw a block with the screen wrap at cell 2\X
+\U139.
+\I\X143:Draw a block with the screen wrap at cell 3\X
+\U139.
+\I\X144:Draw a block with the screen wrap at cell 4\X
+\U139.
+\I\X172:Draw a slice of square\X
+\Us170\ET171.
+\I\X139:Draw a square at square coordinate $[j, i]$\X
+\U138.
+\I\X149:Draw the player\X
+\U148.
+\I\X205:Fill up the active square record\X
+\U203.
+\I\X138:Fill up the buffers with squares\X
+\U136.
+\I\X136:Fill up the screen\X
+\U131.
+\I\X16:Find an at-least-big-enough piece in the free list:mmgr\X
+\U15.
+\I\X127:Find the byte stream and the bit stream\X
+\U119.
+\I\X146:Free the temporary screen buffers\X
+\U136.
+\I\X4, 12, 57, 62, 66, 94, 108, 118, 169, 179, 190, 202, 220, 227, 231:Function
+prototypes\X
+\U3.
+\I\X5, 13, 30, 67, 93, 97, 134, 156, 163, 174, 178, 198, 208, 211, 224,
+225:Global variables\X
+\U3.
+\I\X103:Hardware initialization\X
+\U3.
+\I\X9:Hardware-specific definitions\X
+\U3.
+\I\X2:Header files\X
+\U3.
+\I\X20:If the free list is empty, make the new block be the free list:mmgr\X
+\U19.
+\I\X96:Initialize VDP registers\X
+\U98.
+\I\X98:Initialize the VDP\X
+\U103.
+\I\X104:Initialize the controller ports\X
+\U103.
+\I\X7, 199:Initialize the game\X
+\U61.
+\I\X22:Insert the block into the free list:mmgr\X
+\U19.
+\I\X32:Level 1 declarations\X
+\U31.
+\I\X38:Level 1 layout\X
+\U37.
+\I\X40:Level 1 nodes\X
+\U38.
+\I\X39:Level 1 paths\X
+\U38.
+\I\X33:Level 2 declarations\X
+\U31.
+\I\X41:Level 2 layout\X
+\U37.
+\I\X43:Level 2 nodes\X
+\U41.
+\I\X42:Level 2 paths\X
+\U41.
+\I\X34:Level 3 declarations\X
+\U31.
+\I\X44:Level 3 layout\X
+\U37.
+\I\X46:Level 3 nodes\X
+\U44.
+\I\X45:Level 3 paths\X
+\U44.
+\I\X35:Level 4 declarations\X
+\U31.
+\I\X47:Level 4 layout\X
+\U37.
+\I\X49:Level 4 nodes\X
+\U47.
+\I\X48:Level 4 paths\X
+\U47.
+\I\X36:Level 5 declarations\X
+\U31.
+\I\X50:Level 5 layout\X
+\U37.
+\I\X52:Level 5 nodes\X
+\U50.
+\I\X51:Level 5 paths\X
+\U50.
+\I\X31:Level declarations\X
+\U30.
+\I\X37:Level layouts\X
+\U30.
+\I\X155:Limit screen scrolling\X
+\U152.
+\I\X177:Move the player\X
+\U148.
+\I\X206:Perform the activated square's immediate behavior\X
+\U203.
+\I\X132:Place the player\X
+\U131.
+\I\X128:Preload the bit stream shifter\X
+\U119.
+\I\X69:Process the I/O request:iosys\X
+\U68.
+\I\X21:Put block at beginning of free list:mmgr\X
+\U19.
+\I\X207:Put the record into the active square list\X
+\U203.
+\I\X8:Randomizer\X
+\I\X107:Read one controller\X
+\U106.
+\I\X70:Read the controllers:iosys\X
+\U69.
+\I\X18:Remove the block from the free list:mmgr\X
+\U15.
+\I\X121:Repeat many bytes\X
+\U119.
+\I\X120:Repeat two or three bytes\X
+\U119.
+\I\X145:Request transfer of screen data\X
+\U136.
+\I\X73:Send block specified by 16 bit address to the VDP:iosys\X
+\U69.
+\I\X74:Send block specified by 32 bit address to the VDP:iosys\X
+\U69.
+\I\X78:Send block to VDP display column:iosys\X
+\U69.
+\I\X75:Send new scroll values for both playfields to the VDP:iosys\X
+\U69.
+\I\X76:Send new scroll values for playfield A to the VDP:iosys\X
+\U69.
+\I\X77:Send new scroll values for playfield B to the VDP:iosys\X
+\U69.
+\I\X126:Send out the byte at \PB{${*}\\{temp}$}\X
+\Us120\ET121.
+\I\X125:Send out the next byte\X
+\U119.
+\I\X72:Send palette data to the VDP:iosys\X
+\U69.
+\I\X71:Send the sprite control block to the VDP:iosys\X
+\U69.
+\I\X6:Set initial values\X
+\U3.
+\I\X219:Set up attributes for all the sprites in the shape\X
+\U215.
+\I\X122:Shift the bit stream one place\X
+\Us119, 120, 121, 123\ETs124.
+\I\X124:Shift the bit stream three places\X
+\U121.
+\I\X123:Shift the bit stream two places\X
+\U121.
+\I\X23:Splice the block into the free list:mmgr\X
+\U22.
+\I\X25:Tack the block onto the end of the free list:mmgr\X
+\U22.
+\I\X216:Terminate the sprite list\X
+\U147.
+\I\X24:Try to merge the block with the following block:mmgr\X
+\U23.
+\I\X26:Try to merge the block with the preceeding block:mmgr\X
+\U22.
+\I\X14, 29, 54, 65, 135, 157, 173, 200, 209, 210, 223:Typedef declarations\X
+\U3.
+\I\X133:Unpack and prepare the path map\X
+\U131.
+\I\X150:Update enemies\X
+\U147.
+\I\X151:Update screen\X
+\U147.
+\I\X148:Update the player\X
+\U147.

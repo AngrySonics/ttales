@@ -1,0 +1,118 @@
+
+@ @<Typedef...@>=
+typedef struct {
+    unsigned short *frame;
+    char time;
+    char flags;
+    short next;
+}AnimState, *AnimStatePtr;
+
+@ @d MAX_CREATURE_TYPES 1
+@d MAX_CREATURE_BEHAVIORS 1
+@<Global...@>=
+
+AnimState Animations[] = {
+  {NULL, 0,0,0}@/
+};@#
+
+short AnimPointers[MAX_CREATURE_TYPES][MAX_CREATURE_BEHAVIORS] = {
+  0@/
+};@#
+
+unsigned long *CompressedDataPointers[] = {
+  NULL@/
+};@#
+
+int CreatureShapeLength[] = {
+  0@/
+};@#
+
+@ @c
+void DoAnimFlags(char f, CreaturePtr t){
+AnimStatePtr a;
+
+  switch(f){
+    case 0:
+      break;
+    default:
+      break;
+  }
+}
+
+@ @c
+void AnimateCreature(CreaturePtr t){
+register AnimStatePtr a;
+  if(!(t->anim_time--)){
+    a = &Animations[t->anim_next];
+    t->anim_time = a->time;
+    t->Frame = a->frame;
+    t->anim_next = a->next;
+    DoAnimFlags(a->flags, t);
+  }
+}
+
+@ @c
+void BeginAnimation(CreaturePtr t, int activity){
+register AnimStatePtr a = &Animations[AnimPointers[t->type][activity]];
+  t->anim_time = a->time;
+  t->Frame = a->frame;
+  t->anim_next = a->next;
+  t->behavior = activity;
+  DoAnimFlags(a->flags, t);
+}
+
+@ This procedure decompresses a block of compressed data indexed by |a|
+(presumably a creature's graphics) and DMAs it to VDP location |b|.  It uses an
+intermediate decompression buffer at location |0xff0000|, which must be both
+large enough for the decompressed block and unmanaged by the memory manager.
+
+@c
+int LoadCreature(int a, int b){
+  if(a > 1){
+    ExpandLZ((unsigned char *)CompressedDataPointers[a], (unsigned char *)0xff0000);
+    SendBlock32(0xff0000, b, CreatureShapeLength[a]*32);
+    WaitTOF();
+    return CreatureShapeLength[a];
+  }
+  return 0;
+}
+
+@ This routine draws the player's sprite
+
+@c
+void DrawCreatures(){
+short ty, tx;
+short n, y;
+register short *st;
+register SpriteDefPtr sp;
+
+  sp = &spriteAttributes[sprite];
+
+  st = (short *)currentPlayer->Frame;
+  ty = (yMax - currentPlayer->yPosition*2*8)+128 -
+    8*(pathMap[currentPath->xSize * currentPlayer->yPosition +
+     currentPlayer->xPosition].elevation);
+  if((ty > 32) && (ty < 380)){
+    n = 3;
+    tx = currentPlayer->xPosition*4*8+128 + 2*8*currentPlayer->yPosition;
+    for(y = 0; y < st[0]; y++)
+      @<Place a sprite@>@;
+  }
+
+  /* terminate sprite list */
+  sp = &spriteAttributes[sprite-1];
+  sp->link = 0;
+}
+
+@ @<Place a sprite@>=
+{
+  sp->vp = ty + st[n++];
+  sp->size = st[n++];
+  sp->cell = currentPlayer->chBase + st[n++];
+  sp->link = sprite + 1;
+  sp->hp = tx + st[n++];
+  if(!(sp->hp & 0x1ff)) continue;     /* don't let it sit at 0 */
+  sprite++;
+  sp++;
+}
+

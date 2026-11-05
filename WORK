@@ -1,0 +1,41 @@
+whole game
+  path play
+    playfield scroll
+    playfield animate
+      squares
+      traps
+      palette
+      water/fire
+    creatures
+      behavior
+      animation
+      playfield masking
+    player
+      control
+      animate
+      playfield masking
+    scoreboard operation
+      ammunition
+      power-ups
+      clock
+      icons
+      points?
+    switch players
+  node play
+    playfield draw
+    puzzle mechanics
+    playfield animate
+    character mechanics
+    character animation
+    scoreboard operation?
+    other on-screen animation
+  boss rooms
+  transition screens
+  begin sequence
+    title
+    credits
+    options
+  end sequence
+    win
+    lose
+

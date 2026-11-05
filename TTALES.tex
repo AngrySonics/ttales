@@ -1,0 +1,3772 @@
+\input cwebmac
+% This file is part of Treasure Tales
+% This program by Ken Rose
+
+% Copyright (C) 1993 Sega
+% All rights reserved
+
+% Here is TeX material that gets inserted after \input webmac
+\font\headerfont=cmr9 scaled\magstep1
+\def\hang{\hangindent 3em\indent\ignorespaces}
+\def\Pascal{Pascal}
+\def\pb{$\.|\ldots\.|$} % C brackets (|...|)
+\def\v{\char'174} % vertical (|) in typewriter font
+\def\dleft{[\![} \def\dright{]\!]} % double brackets
+\mathchardef\RA="3221 % right arrow
+\mathchardef\BA="3224 % double arrow
+\def\({} % kludge for alphabetizing certain section names
+
+\def\Title{Treasure Tales}
+\def\TT{{\sl\Title}}
+
+\def\title{\Title}
+\def\topofcontents{\null\vfill
+  \centerline{\headerfont{Sega Technical Institute}}
+  \vskip 15pt
+  \centerline{presents}
+  \vskip 15pt
+  \centerline{\titlefont\Title}
+  \centerline{starring Miles ``Tails'' Prower}
+  \vskip 15pt
+  \centerline{\eightrm{Game Design by}}
+  \centerline{Hoyt Ng}
+  \centerline{Tsuneko Aoki}
+  \vskip 15pt
+  \centerline{\eightrm{Programming by}}
+  \centerline{Ken Rose}
+  \centerline{Earl Stratton}
+  \vskip 15pt
+  \centerline{\eightrm{Graphic Art by}}
+  \centerline{Craig Stitt}
+  \vskip 15pt
+  \centerline{\eightrm{Produced by}}
+  \centerline{Yutaka Sugano}
+  \vfill}
+\def\botofcontents{\vfill
+\noindent
+\centerline{Copyright \copyright\ 1993 Sega}
+}
+\pageno=\contentspagenumber \advance\pageno by 1
+\let\maybe=\iftrue
+\datethis
+
+
+
+\N{1}{1}Introduction.  This is the \TT\ program.  \TT\ has a fairly
+straightforward outline, as one might expect.  The reset autovector sets the
+stack pointer to \PB{\T{\^00fff800}} and sends control to \PB{\\{main}(\,)},
+with the processor
+in supervisor mode.  Nothing else is known about the machine's state (except
+what Motorola and Sega guarantee at power-on).
+
+\Y\B\4\D$\&{offsetof}(\|t,\|f)$ \5
+( (\&{size\_t}) $\AND$ ( ( ( \|t $*$ ) \T{0} ) $\MG$ \|f ) )\par
+\B\4\D$\.{TRUE}$ \5
+\T{1}\par
+\B\4\D$\.{FALSE}$ \5
+\T{0}\par
+\B\4\D$\NULL$ \5
+((\&{void} ${}{*})\,\T{0}{}$)\par
+\B\4\D$\.{TIMING}$ \5
+\T{1}\par
+\fi
+
+\M{2}\B\X2:Header files\X${}\E{}$\6
+\8\#\&{include} \.{"logo.h"}\par
+\U3.\fi
+
+\M{3}Here we initialize the hardware, run the logo, initialize the game, and
+then
+loop forever through the main state machine.
+
+\Y\B\1\1\X2:Header files\X\6
+\X9:Hardware-specific definitions\X\6
+\X14:Typedef declarations\X\6
+\X4:Function prototypes\X\6
+\X5:Global variables\X\6
+\1\1\&{void} \\{main}(\,)\2\2\6
+${}\{{}$\1\6
+\X103:Hardware initialization\X\6
+\\{SegaLogo}(\,);\6
+\X6:Set initial values\X\6
+\&{while} (\.{TRUE})\1\5
+${}\\{mainState}\K\\{fsm}(\\{mainState});{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{4}\B\X4:Function prototypes\X${}\E{}$\6
+\&{void} \\{main}(\&{void});\par
+\As12, 57, 62, 66, 94, 108, 118, 169, 179, 190, 202, 220, 227\ETs231.
+\U3.\fi
+
+\M{5}\B\X5:Global variables\X${}\E{}$\6
+\X221:Data includes\X\7
+\&{long} \\{Player1\_score};\6
+\&{long} \\{Player2\_score};\6
+\&{unsigned} \&{short} \\{seed};\6
+\&{StatePtr} \\{mainState};\6
+\&{int} \\{playerDead};\6
+\&{int} \\{currentRound};\6
+\&{extern} \&{char} \\{sampbank}[\,];\6
+\&{extern} \&{char} \\{seqbank}[\,];\6
+\&{extern} \&{char} \\{envbank}[\,];\6
+\&{extern} \&{char} \\{patchbank}[\,];\par
+\As13, 30, 67, 93, 97, 134, 156, 163, 174, 178, 198, 208, 211, 224\ETs225.
+\U3.\fi
+
+\M{6}This section does basic program initialization after the machine is alive,
+the logo has run, and the sound system has been initialized.
+
+\Y\B\4\D$\\{HeapBase}$ \5
+((\&{char} ${}{*})\,\T{\^00ff0000}{}$)\par
+\B\4\D$\\{HeapLength}$ \5
+\T{\^f000}\par
+\Y\B\4\X6:Set initial values\X${}\E{}$\6
+$\\{mainState}\K\\{InitialState};{}$\6
+${}\\{InitHeap}(\\{HeapBase},\39\\{HeapLength}){}$;\par
+\U3.\fi
+
+\M{7}\B\X7:Initialize the game\X${}\E{}$\6
+$\\{playerDead}\K\.{FALSE};{}$\6
+${}\\{Player1\_score}\K\T{0\$L};{}$\6
+${}\\{Player2\_score}\K\T{0\$L};{}$\6
+${}\\{currentRound}\K\T{0}{}$;\par
+\A199.
+\U61.\fi
+
+\M{8}\B\X8:Randomizer\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{seed}\K\\{seed}*\T{521}+\T{40001};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{9}some Genesis-specific definitions
+
+\Y\B\4\D$\.{VERSION}$ \5
+\T{\^a10001}\par
+\B\4\D$\.{WATCHDOG}$ \5
+\T{\^a14000}\par
+\B\4\D$\.{JOYUP}$ \5
+\T{\^0001}\par
+\B\4\D$\.{JOYDOWN}$ \5
+\T{\^0002}\par
+\B\4\D$\.{JOYLEFT}$ \5
+\T{\^0004}\par
+\B\4\D$\.{JOYRIGHT}$ \5
+\T{\^0008}\par
+\B\4\D$\.{VCTRLL}$ \5
+$\\{VDPPort}.\\{control}.{}$\|l\par
+\B\4\D$\.{VCTRLW}$ \5
+$\\{VDPPort}.\\{control}.{}$\|w\par
+\B\4\D$\.{VDATAW}$ \5
+$\\{VDPPort}.\\{data}.{}$\|w\par
+\B\4\D$\\{InitDMA}(\\{src},\\{dst},\\{bytes})$ \5
+$\.{VCTRLL}\K\T{\^93009400}+(((\\{bytes})\GG\T{9})\AND\T{\^ff})+(((\\{bytes})%
+\LL\T{15})\AND\T{\^ff0000});{}$\6
+${}\.{VCTRLL}\K\T{\^95009600}+(((\\{src})\LL\T{15})\AND\T{\^ff0000})+(((%
+\\{src})\GG\T{9})\AND\T{\^ff});{}$\6
+${}\.{VCTRLW}\K\T{\^9700}+(((\\{src})\GG\T{17})\AND\T{\^7f});{}$\6
+${}\.{VCTRLL}\K\T{\^40000080}+(((\\{dst})\LL\T{16})\AND\T{\^3fff0000})+(((%
+\\{dst})\GG\T{14})\AND\T{3}){}$;\par
+\B\4\D$\\{SetVDPDest}(\\{addr})$ \5
+$\.{VCTRLL}\K\T{\^40000000}+(((\\{addr})\LL\T{16})\AND\T{\^3fff0000})+(((%
+\\{addr})\GG\T{14})\AND\T{3}{}$)\par
+\Y\B\4\X9:Hardware-specific definitions\X${}\E{}$\6
+\8\# \&{pragma} \&{dsection} $.$ \\{vdp} \6
+\&{volatile} \&{struct} ${}\{{}$\1\6
+\&{union} ${}\{{}$\1\6
+\&{short} \|w;\6
+\&{long} \|l;\2\6
+${}\}{}$ \\{data};\6
+\&{union} ${}\{{}$\1\6
+\&{short} \|w;\6
+\&{long} \|l;\2\6
+${}\}{}$ \\{control};\6
+\&{unsigned} \&{char} \\{h\_count};\6
+\&{unsigned} \&{char} \\{v\_count};\2\6
+${}\}{}$ \\{VDPPort}${}\K\T{0};$ \6
+\8\# \&{pragma} \&{dsection} $.$ \\{data} \par
+\U3.\fi
+
+\N{1}{10}VDP layout.
+
+\Y\B\4\D$\.{FG}$ \5
+\T{\^c000}\par
+\B\4\D$\.{SIDEBAR}$ \5
+\T{\^d000}\par
+\B\4\D$\.{BG}$ \5
+\T{\^e000}\par
+\B\4\D$\.{SPRITE\_ATTRIBUTES}$ \5
+\T{\^d000}\par
+\B\4\D$\.{HSCROLL}$ \5
+\T{\^d400}\par
+\B\4\D$\.{SPRITE\_ATTRIBUTE\_VDP\_ADDRESS}$ \5
+\.{SPRITE\_ATTRIBUTES}\par
+\B\4\D$\.{H\_SCROLL\_VDP\_ADDRESS}$ \5
+\.{HSCROLL}\par
+\B\4\D$\.{FG\_CELLS}$ \5
+\T{0} $\I{}$\par
+\fi
+
+\N{1}{11}Memory Manager.  Memory allocation  and
+deallocation  is provided by these routines.
+\PB{\\{AllocMem}} uses the first fit algorithm.  It does not initialize the
+memory in any way.  FreeMem sorts the free list and merges adjacent
+blocks.  No garbage collection or heap compaction is performed.
+Information critical to the integrity of the memory management system is
+stored immediately adjacent to allocated blocks.  If a client overwrites
+the boundaries of an allocation, bad things will happen.
+
+\fi
+
+\M{12}First, some definitions---
+
+\Y\B\4\X4:Function prototypes\X${}\mathrel+\E{}$\6
+\&{void} ${}{*}{}$\\{AllocMem}(\&{unsigned} \&{int} \\{size});\6
+\&{void} \\{FreeMem}(\&{void} ${}{*}\\{addr}){}$;\6
+\&{void} \\{InitHeap}(\&{char} ${}{*}\\{addr},\39{}$\&{int} \\{size});\par
+\fi
+
+\M{13}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{MemBlockPtr} \\{freeList};\par
+\fi
+
+\M{14}This is the structure of the header of a free block.
+
+\Y\B\4\X14:Typedef declarations\X${}\E{}$\6
+\&{typedef} \&{struct} \&{memblock} ${}\{{}$\1\6
+\&{unsigned} \&{int} \\{size};\6
+\&{struct} \&{memblock} ${}{*}\\{next};{}$\6
+\&{struct} \&{memblock} ${}{*}\\{prev};{}$\2\6
+${}\}{}$ \&{MemBlock}${},{}$ ${}{*}\&{MemBlockPtr}{}$;\par
+\As29, 54, 65, 135, 157, 173, 200, 209, 210\ETs223.
+\U3.\fi
+
+\M{15}\PB{\\{AllocMem}} proceeds in a simple manner.  First it scans the free
+list
+looking for a block that is at least as large as the client has requested,
+plus overhead.  If it fails to find one, it returns \PB{$\NULL$}.  If it
+succeeds, it decides whether it can produce a new free block from the
+remnant.  If not, it returns the entire block to the client.  If so, it
+cuts off a slice and gives it to the client.
+
+\Y\B\1\1\&{void} ${}{*}{}$\\{AllocMem}(\&{unsigned} \&{int} \\{size}) $\{{}$\6
+\&{MemBlockPtr} \\{current}${}\K\\{freeList};{}$\7
+${}\\{size}\MRL{+{\K}}\&{sizeof}(\&{int}){}$;\6
+\X16:Find an at-least-big-enough piece in the free list:mmgr\X\6
+\&{if} ${}(\\{current}\MG\\{size}>\\{size}+\&{sizeof}(\&{MemBlock}))$ \X17:Cut
+a chunk off the free block and prep it:mmgr\X\6
+\&{else}\1\5
+\X18:Remove the block from the free list:mmgr\X\6
+\&{return} (\&{void} ${}{*})({}$((\&{char} ${}{*})\,\\{current})+\&{sizeof}(%
+\&{int})){}$;\2\6
+$\}{}$\par
+\fi
+
+\M{16}\B\X16:Find an at-least-big-enough piece in the free list:mmgr\X${}\E{}$\6
+${}\{{}$\1\6
+\&{while} ${}(\\{current}\W(\\{current}\MG\\{size}<\\{size}){}$)\1\6
+${}\\{current}\K\\{current}\MG\\{next};{}$\2\6
+\&{if} ${}(\R\\{current}){}$\1\5
+\&{return} ${}\NULL;{}$\2\6
+\4${}\}{}$\2\par
+\U15.\fi
+
+\M{17}\B\X17:Cut a chunk off the free block and prep it:mmgr\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{current}\MG\\{size}\MRL{-{\K}}\\{size};{}$\6
+${}\\{current}\K{}$(\&{MemBlockPtr})(((\&{char} ${}{*})\,\\{current})+%
+\\{current}\MG\\{size});{}$\6
+${}\\{current}\MG\\{size}\K\\{size};{}$\6
+\4${}\}{}$\2\par
+\U15.\fi
+
+\M{18}\B\X18:Remove the block from the free list:mmgr\X${}\E{}$\6
+${}\{{}$\1\6
+\&{if} ${}(\\{current}\MG\\{prev}){}$\1\5
+${}\\{current}\MG\\{prev}\MG\\{next}\K\\{current}\MG\\{next};{}$\2\6
+\&{else}\1\5
+${}\\{freeList}\K\\{current}\MG\\{next};{}$\2\6
+\&{if} ${}(\\{current}\MG\\{next}{}$)\1\6
+${}\\{current}\MG\\{next}\MG\\{prev}\K\\{current}\MG\\{prev};{}$\2\6
+\4${}\}{}$\2\par
+\U15.\fi
+
+\M{19}This routine frees a block by inserting it into the free list, in sorted
+position with higher addresses later in the list, and merging it with
+adjacent free blocks, if there are any.  The slightly contorted definition
+of \PB{\\{block}}, below, is to recover the position of the allocation block,
+as
+opposed to the address we told the client.  If the client attempts to free
+an address other than what we gave him, expect bad things to happen.
+
+\Y\B\1\1\&{void} \\{FreeMem}(\&{void} ${}{*}\\{addr})\2\2{}$\6
+${}\{{}$\1\6
+\&{MemBlockPtr} \\{block}${}\K{}$((\&{MemBlockPtr})(((\&{char} ${}{*})\,%
+\\{addr})-\&{sizeof}(\&{int})));{}$\7
+\X20:If the free list is empty, make the new block be the free list:mmgr\X\6
+\&{if} ${}(\\{block}<\\{freeList}){}$\1\5
+\X21:Put block at beginning of free list:mmgr\X\2\6
+\&{else}\1\5
+\X22:Insert the block into the free list:mmgr\X\2\6
+\&{return};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{20}\B\X20:If the free list is empty, make the new block be the free
+list:mmgr\X${}\E{}$\6
+\&{if} ${}(\R\\{freeList}){}$\5
+${}\{{}$\1\6
+${}\\{freeList}\K\\{block};{}$\6
+${}\\{block}\MG\\{next}\K\NULL;{}$\6
+${}\\{block}\MG\\{prev}\K\NULL;{}$\6
+\&{return};\6
+\4${}\}{}$\2\par
+\U19.\fi
+
+\M{21}This module places the new block on the head of the free list, merging
+it with the former head of the list if appropriate.
+
+\Y\B\4\X21:Put block at beginning of free list:mmgr\X${}\E{}$\6
+\&{if} ${}(\\{block}+\\{block}\MG\\{size}\E\\{freeList}){}$\5
+${}\{{}$\1\6
+${}\\{block}\MG\\{size}\MRL{+{\K}}\\{freeList}\MG\\{size};{}$\6
+${}\\{block}\MG\\{next}\K\\{freeList}\MG\\{next};{}$\6
+${}\\{block}\MG\\{prev}\K\NULL;{}$\6
+${}\\{freeList}\K\\{addr};{}$\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{block}\MG\\{next}\K\\{freeList};{}$\6
+${}\\{freeList}\MG\\{prev}\K\\{block};{}$\6
+${}\\{freeList}\K\\{block};{}$\6
+\4${}\}{}$\2\par
+\U19.\fi
+
+\M{22}\B\X22:Insert the block into the free list:mmgr\X${}\E{}$\6
+${}\{{}$\1\6
+\&{MemBlockPtr} \\{list}${}\K\\{freeList}{}$;\C{ find where it belongs }\7
+\&{do}\5
+${}\{{}$\1\6
+${}\\{list}\K\\{list}\MG\\{next}{}$;\6
+\4${}\}{}$\2\5
+\&{while} ${}(\\{list}\MG\\{next}\W(\\{block}>\\{list}));{}$\6
+\&{if} ${}(\\{list}\MG\\{next}){}$\1\5
+\X23:Splice the block into the free list:mmgr\X\2\6
+\&{else}\1\5
+\X25:Tack the block onto the end of the free list:mmgr\X\2\6
+\X26:Try to merge the block with the preceeding block:mmgr\X\6
+\4${}\}{}$\2\par
+\U19.\fi
+
+\M{23}\B\X23:Splice the block into the free list:mmgr\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{block}\MG\\{next}\K\\{list}\MG\\{next};{}$\6
+${}\\{list}\MG\\{next}\K\\{block};{}$\6
+${}\\{block}\MG\\{prev}\K\\{block}\MG\\{next}\MG\\{prev};{}$\6
+${}\\{block}\MG\\{next}\MG\\{prev}\K\\{block};{}$\6
+\X24:Try to merge the block with the following block:mmgr\X\6
+\4${}\}{}$\2\par
+\U22.\fi
+
+\M{24}\B\X24:Try to merge the block with the following block:mmgr\X${}\E{}$\6
+\&{if} ((\&{MemBlockPtr})((\&{char} ${}{*})\,\\{block}+\\{block}\MG\\{size})\E%
+\\{block}\MG\\{next}){}$\5
+${}\{{}$\1\6
+${}\\{block}\MG\\{size}\MRL{+{\K}}\\{block}\MG\\{next}\MG\\{size};{}$\6
+${}\\{block}\MG\\{next}\K\\{block}\MG\\{next}\MG\\{next};{}$\6
+\&{if} ${}(\\{block}\MG\\{next}{}$)\1\6
+${}\\{block}\MG\\{next}\MG\\{prev}\K\\{block};{}$\2\6
+\4${}\}{}$\2\par
+\U23.\fi
+
+\M{25}\B\X25:Tack the block onto the end of the free list:mmgr\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{list}\MG\\{next}\K\\{block};{}$\6
+${}\\{block}\MG\\{prev}\K\\{list};{}$\6
+${}\\{block}\MG\\{next}\K\NULL;{}$\6
+\4${}\}{}$\2\par
+\U22.\fi
+
+\M{26}\B\X26:Try to merge the block with the preceeding block:mmgr\X${}\E{}$\6
+\&{if} ((\&{MemBlockPtr})((\&{char} ${}{*})(\\{block}\MG\\{prev})+\\{block}\MG%
+\\{prev}\MG\\{size})\E\\{block}){}$\5
+${}\{{}$\1\6
+${}\\{block}\MG\\{prev}\MG\\{size}\MRL{+{\K}}\\{block}\MG\\{size};{}$\6
+${}\\{block}\MG\\{prev}\MG\\{next}\K\\{block}\MG\\{next};{}$\6
+\&{if} ${}(\\{block}\MG\\{next}{}$)\1\6
+${}\\{block}\MG\\{next}\MG\\{prev}\K\\{block}\MG\\{prev};{}$\2\6
+\4${}\}{}$\2\par
+\U22.\fi
+
+\M{27}\B\1\1\&{void} \\{InitHeap}(\&{char} ${}{*}\\{addr},\39{}$\&{int} %
+\\{size})\2\2\6
+${}\{{}$\1\6
+${}\\{freeList}\K(\&{MemBlockPtr})\,\\{addr};{}$\6
+${}\\{freeList}\MG\\{next}\K\NULL;{}$\6
+${}\\{freeList}\MG\\{prev}\K\NULL;{}$\6
+${}\\{freeList}\MG\\{size}\K\\{size};{}$\6
+\4${}\}{}$\2\6
+$\I{}$\par
+\fi
+
+\N{1}{28}The World. The next few sections specify the world map of \TT.
+
+\fi
+
+\M{29}Data Structures.  The world of \TT\ is composed essentially of an
+undirected graph.  Vertices represent ``nodes'' and edges represent
+``paths''.  Associated with each node is an art set, a puzzle, and a set
+of attached paths.  Associated with each path is an art set, a map, and
+the nodes attached to each of its ends.
+
+\Y\B\4\X14:Typedef declarations\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{node\_t} ${}\{{}$\1\6
+\&{struct} \\{art\_t} ${}{*}\\{artSet};{}$\6
+\&{int} \\{puzzle};\6
+\&{struct} \\{path\_t} ${}{*}\\{paths}[\T{4}];{}$\2\6
+${}\}{}$ \&{Node}${},{}$ ${}{*}\&{NodePtr}{}$;\7
+\&{typedef} \&{struct} \&{path\_t} ${}\{{}$\1\6
+\&{struct} \\{art\_t} ${}{*}\\{artSet};{}$\6
+\&{struct} \\{square\_t} ${}{*}\\{map};{}$\6
+\&{NodePtr} \\{leftEnd};\6
+\&{NodePtr} \\{rightEnd};\6
+\&{short} \\{xSize};\6
+\&{short} \\{ySize};\6
+\&{short} \\{xStart};\6
+\&{short} \\{yStart};\2\6
+${}\}{}$ \&{Path}${},{}$ ${}{*}\&{PathPtr}{}$;\par
+\fi
+
+\M{30}\TT\ is composed of five levels, each consisting of a network of nodes
+connected by paths.
+
+\Y\B\4\X5:Global variables\X${}\mathrel+\E{}$\6
+\X31:Level declarations\X\6
+\X37:Level layouts\X\par
+\fi
+
+\M{31}\B\X31:Level declarations\X${}\E{}$\6
+\X32:Level 1 declarations\X\6
+\X33:Level 2 declarations\X\6
+\X34:Level 3 declarations\X\6
+\X35:Level 4 declarations\X\6
+\X36:Level 5 declarations\X\par
+\U30.\fi
+
+\M{32}\B\X32:Level 1 declarations\X${}\E{}$\6
+\&{Node} \\{n1\_1}${},\39\\{n1\_2},\39\\{n1\_3},\39\\{n1\_4},\39\\{n1\_5},\39%
+\\{n1\_6},\39\\{n1\_7},\39\\{n1\_8};{}$\6
+\&{Path} \\{p1\_1}${},\39\\{p1\_2},\39\\{p1\_3},\39\\{p1\_4},\39\\{p1\_5},\39%
+\\{p1\_6},\39\\{p1\_7};{}$\6
+\&{Path} \\{p1\_8}${},\39\\{p1\_9},\39\\{p1\_10},\39\\{p1\_11},\39\\{p1%
+\_12}{}$;\par
+\U31.\fi
+
+\M{33}\B\X33:Level 2 declarations\X${}\E{}$\6
+\&{Node} \\{n2\_1}${},\39\\{n2\_2},\39\\{n2\_3},\39\\{n2\_4},\39\\{n2\_5},\39%
+\\{n2\_6},\39\\{n2\_7},\39\\{n2\_8},\39\\{n2\_9},\39\\{n2\_10},\39\\{n2%
+\_11};{}$\6
+\&{Path} \\{p2\_1}${},\39\\{p2\_2},\39\\{p2\_3},\39\\{p2\_4},\39\\{p2\_5},\39%
+\\{p2\_6},\39\\{p2\_7},\39\\{p2\_8},\39\\{p2\_9},\39\\{p2\_10};{}$\6
+\&{Path} \\{p2\_11}${},\39\\{p2\_12},\39\\{p2\_13},\39\\{p2\_14},\39\\{p2\_15},%
+\39\\{p2\_16},\39\\{p2\_17}{}$;\par
+\U31.\fi
+
+\M{34}\B\X34:Level 3 declarations\X${}\E{}$\6
+\&{Node} \\{n3\_1}${},\39\\{n3\_2},\39\\{n3\_3},\39\\{n3\_4},\39\\{n3\_5},\39%
+\\{n3\_6},\39\\{n3\_7},\39\\{n3\_8},\39\\{n3\_9},\39\\{n3\_10},\39\\{n3%
+\_11};{}$\6
+\&{Path} \\{p3\_1}${},\39\\{p3\_2},\39\\{p3\_3},\39\\{p3\_4},\39\\{p3\_5},\39%
+\\{p3\_6},\39\\{p3\_7};{}$\6
+\&{Path} \\{p3\_8}${},\39\\{p3\_9},\39\\{p3\_10},\39\\{p3\_11},\39\\{p3\_12},%
+\39\\{p3\_13}{}$;\par
+\U31.\fi
+
+\M{35}\B\X35:Level 4 declarations\X${}\E{}$\6
+\&{Node} \\{n4\_1}${},\39\\{n4\_2},\39\\{n4\_3},\39\\{n4\_4},\39\\{n4\_5},\39%
+\\{n4\_6},\39\\{n4\_7},\39\\{n4\_8};{}$\6
+\&{Node} \\{n4\_9}${},\39\\{n4\_10},\39\\{n4\_11},\39\\{n4\_12},\39\\{n4\_13},%
+\39\\{n4\_14},\39\\{n4\_15};{}$\6
+\&{Path} \\{p4\_1}${},\39\\{p4\_2},\39\\{p4\_3},\39\\{p4\_4},\39\\{p4\_5},\39%
+\\{p4\_6},\39\\{p4\_7},\39\\{p4\_8},\39\\{p4\_9},\39\\{p4\_10};{}$\6
+\&{Path} \\{p4\_11}${},\39\\{p4\_12},\39\\{p4\_13},\39\\{p4\_14},\39\\{p4\_15},%
+\39\\{p4\_16},\39\\{p4\_17}{}$;\par
+\U31.\fi
+
+\M{36}\B\X36:Level 5 declarations\X${}\E{}$\6
+\&{Node} \\{n5\_1}${},\39\\{n5\_2},\39\\{n5\_3},\39\\{n5\_4},\39\\{n5\_5},\39%
+\\{n5\_6},\39\\{n5\_7},\39\\{n5\_8};{}$\6
+\&{Node} \\{n5\_9}${},\39\\{n5\_10},\39\\{n5\_11},\39\\{n5\_12},\39\\{n5\_13},%
+\39\\{n5\_14},\39\\{n5\_15};{}$\6
+\&{Path} \\{p5\_1}${},\39\\{p5\_2},\39\\{p5\_3},\39\\{p5\_4},\39\\{p5\_5},\39%
+\\{p5\_6},\39\\{p5\_7},\39\\{p5\_8},\39\\{p5\_9},\39\\{p5\_10};{}$\6
+\&{Path} \\{p5\_11}${},\39\\{p5\_12},\39\\{p5\_13},\39\\{p5\_14},\39\\{p5\_15},%
+\39\\{p5\_16},\39\\{p5\_17},\39\\{p5\_18},\39\\{p5\_19},\39\\{p5\_20};{}$\6
+\&{Path} \\{NormalExit};\6
+\&{Path} \\{SpecialExit};\par
+\U31.\fi
+
+\M{37}\B\X37:Level layouts\X${}\E{}$\6
+\X38:Level 1 layout\X\6
+\X41:Level 2 layout\X\6
+\X44:Level 3 layout\X\6
+\X47:Level 4 layout\X\6
+\X50:Level 5 layout\X\par
+\U30.\fi
+
+\M{38}\B\X38:Level 1 layout\X${}\E{}$\6
+\X39:Level 1 paths\X\6
+\X40:Level 1 nodes\X\par
+\U37.\fi
+
+\M{39}\B\X39:Level 1 paths\X${}\E{}$\6
+\&{Path} \\{p1\_1}${}\K\{{\AND}\\{round1PathArt},\39{\AND}\\{round1Path1Map},%
+\39\NULL,\39{\AND}\\{n1\_1},\39\T{20},\39\T{20},\39\T{3},\39\T{0}\};{}$\6
+\&{Path} \\{p1\_2}${}\K\{{\AND}\\{round1PathArt},\39\NULL,\39{\AND}\\{n1\_1},%
+\39{\AND}\\{n1\_2},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p1\_3}${}\K\{{\AND}\\{round1PathArt},\39\NULL,\39{\AND}\\{n1\_2},%
+\39{\AND}\\{n1\_3},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p1\_4}${}\K\{{\AND}\\{round1PathArt},\39\NULL,\39{\AND}\\{n1\_3},%
+\39{\AND}\\{n1\_4},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p1\_5}${}\K\{{\AND}\\{round1PathArt},\39\NULL,\39{\AND}\\{n1\_4},%
+\39{\AND}\\{n1\_5},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p1\_6}${}\K\{{\AND}\\{round1PathArt},\39\NULL,\39{\AND}\\{n1\_4},%
+\39{\AND}\\{n1\_6},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p1\_7}${}\K\{{\AND}\\{round1PathArt},\39\NULL,\39{\AND}\\{n1\_5},%
+\39{\AND}\\{n1\_6},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p1\_8}${}\K\{{\AND}\\{round1PathArt},\39\NULL,\39{\AND}\\{n1\_5},%
+\39{\AND}\\{n1\_6},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p1\_9}${}\K\{{\AND}\\{round1PathArt},\39\NULL,\39{\AND}\\{n1\_5},%
+\39{\AND}\\{n1\_7},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p1\_10}${}\K\{{\AND}\\{round1PathArt},\39\NULL,\39{\AND}\\{n1\_6},%
+\39{\AND}\\{n1\_7},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p1\_11}${}\K\{{\AND}\\{round1PathArt},\39\NULL,\39{\AND}\\{n1\_3},%
+\39{\AND}\\{n1\_8},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p1\_12}${}\K\{{\AND}\\{round1PathArt},\39\NULL,\39{\AND}\\{n1\_8},%
+\39{\AND}\\{n1\_4},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\}{}$;\par
+\U38.\fi
+
+\M{40}\B\X40:Level 1 nodes\X${}\E{}$\6
+\&{Node} \\{n1\_1}${}\K\{\NULL,\39\T{0},\39\NULL,\39{\AND}\\{p1\_2},\39\NULL,%
+\39\NULL\};{}$\6
+\&{Node} \\{n1\_2}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p1\_2},\39{\AND}\\{p1\_3},%
+\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n1\_3}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p1\_3},\39{\AND}\\{p1\_4},%
+\39{\AND}\\{p1\_11},\39\NULL\};{}$\6
+\&{Node} \\{n1\_4}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p1\_4},\39{\AND}\\{p1\_5},%
+\39{\AND}\\{p1\_6},\39{\AND}\\{p1\_12}\};{}$\6
+\&{Node} \\{n1\_5}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p1\_5},\39{\AND}\\{p1\_7},%
+\39{\AND}\\{p1\_8},\39{\AND}\\{p1\_9}\};{}$\6
+\&{Node} \\{n1\_6}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p1\_6},\39{\AND}\\{p1\_7},%
+\39{\AND}\\{p1\_8},\39{\AND}\\{p1\_10}\};{}$\6
+\&{Node} \\{n1\_7}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p1\_9},\39{\AND}\\{p1\_10},%
+\39{\AND}\\{p2\_1},\39\NULL\};{}$\6
+\&{Node} \\{n1\_8}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p1\_11},\39{\AND}\\{p1%
+\_12},\39\NULL,\39\NULL\}{}$;\par
+\U38.\fi
+
+\M{41}\B\X41:Level 2 layout\X${}\E{}$\6
+\X42:Level 2 paths\X\6
+\X43:Level 2 nodes\X\par
+\U37.\fi
+
+\M{42}\B\X42:Level 2 paths\X${}\E{}$\6
+\&{Path} \\{p2\_1}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n1\_7},\39{\AND}\\{n2\_1},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_2}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_1},\39{\AND}\\{n2\_2},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_3}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_2},\39{\AND}\\{n2\_3},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_4}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_2},\39{\AND}\\{n2\_4},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_5}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_3},\39{\AND}\\{n2\_3},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_6}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_3},\39{\AND}\\{n2\_5},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_7}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_4},\39{\AND}\\{n2\_5},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_8}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_5},\39{\AND}\\{n2\_6},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_9}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_5},\39{\AND}\\{n2\_7},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_10}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_6},\39{\AND}\\{n2\_7},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_11}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_6},\39{\AND}\\{n2\_8},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_12}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_7},\39{\AND}\\{n2\_9},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_13}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_8},\39{\AND}\\{n2%
+\_10},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_14}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_9},\39{\AND}\\{n2%
+\_10},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_15}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_4},\39{\AND}\\{n2\_7},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_16}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_6},\39{\AND}\\{n2%
+\_11},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p2\_17}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_11},\39{\AND}\\{n2%
+\_10},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\}{}$;\par
+\U41.\fi
+
+\M{43}\B\X43:Level 2 nodes\X${}\E{}$\6
+\&{Node} \\{n2\_1}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p2\_1},\39{\AND}\\{p2\_2},%
+\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n2\_2}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p2\_2},\39{\AND}\\{p2\_3},%
+\39{\AND}\\{p2\_4},\39\NULL\};{}$\6
+\&{Node} \\{n2\_3}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p2\_3},\39{\AND}\\{p2\_5},%
+\39{\AND}\\{p2\_6},\39\NULL\};{}$\6
+\&{Node} \\{n2\_4}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p2\_3},\39{\AND}\\{p2\_5},%
+\39{\AND}\\{p2\_7},\39{\AND}\\{p2\_15}\};{}$\6
+\&{Node} \\{n2\_5}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p2\_6},\39{\AND}\\{p2\_7},%
+\39{\AND}\\{p2\_8},\39{\AND}\\{p2\_9}\};{}$\6
+\&{Node} \\{n2\_6}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p2\_8},\39{\AND}\\{p2\_10},%
+\39{\AND}\\{p2\_11},\39{\AND}\\{p2\_16}\};{}$\6
+\&{Node} \\{n2\_7}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p2\_15},\39{\AND}\\{p2\_9},%
+\39{\AND}\\{p2\_10},\39{\AND}\\{p2\_12}\};{}$\6
+\&{Node} \\{n2\_8}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p2\_11},\39{\AND}\\{p2%
+\_13},\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n2\_9}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p2\_12},\39{\AND}\\{p2%
+\_14},\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n2\_10}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p2\_14},\39{\AND}\\{p2%
+\_13},\39{\AND}\\{p2\_17},\39{\AND}\\{p3\_1}\};{}$\6
+\&{Node} \\{n2\_11}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p2\_16},\39{\AND}\\{p2%
+\_17},\39\NULL,\39\NULL\}{}$;\par
+\U41.\fi
+
+\M{44}\B\X44:Level 3 layout\X${}\E{}$\6
+\X45:Level 3 paths\X\6
+\X46:Level 3 nodes\X\par
+\U37.\fi
+
+\M{45}\B\X45:Level 3 paths\X${}\E{}$\6
+\&{Path} \\{p3\_1}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n2\_10},\39{\AND}\\{n3\_1},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p3\_2}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n3\_1},\39{\AND}\\{n3\_2},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p3\_3}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n3\_2},\39{\AND}\\{n3\_3},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p3\_4}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n3\_3},\39{\AND}\\{n3\_5},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p3\_5}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n3\_3},\39{\AND}\\{n3\_4},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p3\_6}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n3\_5},\39{\AND}\\{n3\_6},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p3\_7}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n3\_6},\39{\AND}\\{n3\_7},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p3\_8}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n3\_4},\39{\AND}\\{n3\_7},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p3\_9}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n3\_5},\39{\AND}\\{n3\_8},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p3\_10}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n3\_7},\39{\AND}\\{n3\_8},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p3\_11}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n3\_6},\39{\AND}\\{n3\_9},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p3\_12}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n3\_9},\39{\AND}\\{n3%
+\_10},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p3\_13}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n3\_10},\39{\AND}\\{n3%
+\_11},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\}{}$;\par
+\U44.\fi
+
+\M{46}\B\X46:Level 3 nodes\X${}\E{}$\6
+\&{Node} \\{n3\_1}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p3\_1},\39{\AND}\\{p3\_2},%
+\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n3\_2}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p3\_2},\39{\AND}\\{p3\_3},%
+\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n3\_3}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p3\_3},\39{\AND}\\{p3\_4},%
+\39{\AND}\\{p3\_5},\39\NULL\};{}$\6
+\&{Node} \\{n3\_4}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p3\_5},\39{\AND}\\{p3\_8},%
+\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n3\_5}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p3\_4},\39{\AND}\\{p3\_6},%
+\39{\AND}\\{p3\_9},\39\NULL\};{}$\6
+\&{Node} \\{n3\_6}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p3\_6},\39{\AND}\\{p3\_7},%
+\39{\AND}\\{p3\_11},\39\NULL\};{}$\6
+\&{Node} \\{n3\_7}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p3\_8},\39{\AND}\\{p3\_7},%
+\39{\AND}\\{p3\_10},\39\NULL\};{}$\6
+\&{Node} \\{n3\_8}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p3\_9},\39{\AND}\\{p3\_10},%
+\39{\AND}\\{p4\_1},\39\NULL\};{}$\6
+\&{Node} \\{n3\_9}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p3\_11},\39{\AND}\\{p3%
+\_12},\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n3\_10}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p3\_12},\39{\AND}\\{p3%
+\_13},\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n3\_11}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p3\_13},\39{\AND}\\{p4%
+\_13},\39\NULL,\39\NULL\}{}$;\par
+\U44.\fi
+
+\M{47}\B\X47:Level 4 layout\X${}\E{}$\6
+\X48:Level 4 paths\X\6
+\X49:Level 4 nodes\X\par
+\U37.\fi
+
+\M{48}\B\X48:Level 4 paths\X${}\E{}$\6
+\&{Path} \\{p4\_1}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n3\_8},\39{\AND}\\{n4\_1},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_2}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_1},\39{\AND}\\{n4\_3},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_3}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_2},\39{\AND}\\{n4\_5},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_4}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_3},\39{\AND}\\{n4\_6},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_5}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_5},\39{\AND}\\{n4\_7},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_6}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_6},\39{\AND}\\{n4\_7},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_7}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_6},\39{\AND}\\{n4\_8},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_8}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_8},\39{\AND}\\{n4\_9},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_9}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_8},\39{\AND}\\{n4\_10},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_10}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_9},\39{\AND}\\{n4%
+\_12},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_11}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_10},\39{\AND}\\{n4%
+\_11},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_12}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_11},\39{\AND}\\{n4%
+\_12},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_13}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n3\_11},\39{\AND}\\{n4%
+\_2},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_14}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_2},\39{\AND}\\{n4%
+\_13},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_15}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_13},\39{\AND}\\{n4%
+\_14},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_16}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_14},\39{\AND}\\{n4%
+\_15},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p4\_17}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_15},\39{\AND}\\{n4%
+\_12},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\}{}$;\par
+\U47.\fi
+
+\M{49}\B\X49:Level 4 nodes\X${}\E{}$\6
+\&{Node} \\{n4\_1}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p4\_1},\39{\AND}\\{p4\_2},%
+\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n4\_2}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p4\_13},\39{\AND}\\{p4%
+\_14},\39{\AND}\\{p4\_3},\39\NULL\};{}$\6
+\&{Node} \\{n4\_3}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p4\_2},\39{\AND}\\{p4\_4},%
+\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n4\_4}${}\K\{\NULL,\39\T{0},\39\NULL,\39\NULL,\39\NULL,\39\NULL%
+\};{}$\6
+\&{Node} \\{n4\_5}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p4\_3},\39{\AND}\\{p4\_5},%
+\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n4\_6}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p4\_4},\39{\AND}\\{p4\_6},%
+\39{\AND}\\{p4\_7},\39\NULL\};{}$\6
+\&{Node} \\{n4\_7}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p4\_5},\39{\AND}\\{p4\_6},%
+\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n4\_8}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p4\_7},\39{\AND}\\{p4\_8},%
+\39{\AND}\\{p4\_9},\39\NULL\};{}$\6
+\&{Node} \\{n4\_9}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p4\_8},\39{\AND}\\{p4\_10},%
+\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n4\_10}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p4\_9},\39{\AND}\\{p4%
+\_11},\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n4\_11}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p4\_11},\39{\AND}\\{p4%
+\_12},\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n4\_12}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p4\_10},\39{\AND}\\{p4%
+\_12},\39{\AND}\\{p5\_1},\39{\AND}\\{p4\_17}\};{}$\6
+\&{Node} \\{n4\_13}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p4\_14},\39{\AND}\\{p4%
+\_15},\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n4\_14}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p4\_15},\39{\AND}\\{p4%
+\_16},\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n4\_15}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p4\_16},\39{\AND}\\{p4%
+\_17},\39\NULL,\39\NULL\}{}$;\par
+\U47.\fi
+
+\M{50}\B\X50:Level 5 layout\X${}\E{}$\6
+\X51:Level 5 paths\X\6
+\X52:Level 5 nodes\X\par
+\U37.\fi
+
+\M{51}\B\X51:Level 5 paths\X${}\E{}$\6
+\&{Path} \\{p5\_1}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n4\_12},\39{\AND}\\{n5\_1},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_2}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_1},\39{\AND}\\{n5\_2},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_3}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_1},\39{\AND}\\{n5\_3},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_4}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_3},\39{\AND}\\{n5\_7},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_5}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_2},\39{\AND}\\{n5\_4},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_6}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_2},\39{\AND}\\{n5\_5},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_7}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_2},\39{\AND}\\{n5\_6},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_8}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_5},\39{\AND}\\{n5\_6},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_9}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_6},\39{\AND}\\{n5\_7},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_10}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_4},\39{\AND}\\{n5\_8},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_11}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_6},\39{\AND}\\{n5\_9},%
+\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_12}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_7},\39{\AND}\\{n5%
+\_11},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_13}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_8},\39{\AND}\\{n5%
+\_11},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_14}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_9},\39{\AND}\\{n5%
+\_10},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_15}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_10},\39{\AND}\\{n5%
+\_12},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_16}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_11},\39{\AND}\\{n5%
+\_12},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_17}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_7},\39{\AND}\\{n5%
+\_13},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_18}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_13},\39{\AND}\\{n5%
+\_12},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_19}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_8},\39{\AND}\\{n5%
+\_14},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{p5\_20}${}\K\{\NULL,\39\NULL,\39{\AND}\\{n5\_14},\39{\AND}\\{n5%
+\_15},\39\T{0},\39\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{NormalExit}${}\K\{\NULL,\39\NULL,\39\NULL,\39\NULL,\39\T{0},\39%
+\T{0},\39\T{0},\39\T{0}\};{}$\6
+\&{Path} \\{SpecialExit}${}\K\{\NULL,\39\NULL,\39\NULL,\39\NULL,\39\T{0},\39%
+\T{0},\39\T{0},\39\T{0}\}{}$;\par
+\U50.\fi
+
+\M{52}\B\X52:Level 5 nodes\X${}\E{}$\6
+\&{Node} \\{n5\_1}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_1},\39{\AND}\\{p5\_2},%
+\39{\AND}\\{p5\_3},\39\NULL\};{}$\6
+\&{Node} \\{n5\_2}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_2},\39{\AND}\\{p5\_7},%
+\39{\AND}\\{p5\_6},\39{\AND}\\{p5\_5}\};{}$\6
+\&{Node} \\{n5\_3}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_1},\39{\AND}\\{p5\_3},%
+\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n5\_4}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_5},\39{\AND}\\{p5\_10},%
+\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n5\_5}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_6},\39{\AND}\\{p5\_8},%
+\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n5\_6}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_7},\39{\AND}\\{p5\_8},%
+\39{\AND}\\{p5\_9},\39{\AND}\\{p5\_11}\};{}$\6
+\&{Node} \\{n5\_7}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_4},\39{\AND}\\{p5\_9},%
+\39{\AND}\\{p5\_12},\39{\AND}\\{p5\_17}\};{}$\6
+\&{Node} \\{n5\_8}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_10},\39{\AND}\\{p5%
+\_13},\39{\AND}\\{p5\_19},\39\NULL\};{}$\6
+\&{Node} \\{n5\_9}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_11},\39{\AND}\\{p5%
+\_14},\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n5\_10}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_14},\39{\AND}\\{p5%
+\_15},\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n5\_11}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_12},\39{\AND}\\{p5%
+\_13},\39{\AND}\\{p5\_16},\39\NULL\};{}$\6
+\&{Node} \\{n5\_12}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_15},\39{\AND}\\{p5%
+\_16},\39{\AND}\\{p5\_18},\39{\AND}\\{NormalExit}\};{}$\6
+\&{Node} \\{n5\_13}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_17},\39{\AND}\\{p5%
+\_18},\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n5\_14}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_19},\39{\AND}\\{p5%
+\_20},\39\NULL,\39\NULL\};{}$\6
+\&{Node} \\{n5\_15}${}\K\{\NULL,\39\T{0},\39{\AND}\\{p5\_20},\39{\AND}%
+\\{SpecialExit},\39\NULL,\39\NULL\};$ $\I{}$\par
+\U50.\fi
+
+\N{1}{53}The State Machine Engine.  This module implements a general purpose
+attributed finite state machine.  It executes attributes on transitions.
+
+\fi
+
+\M{54}More typedefs
+
+\Y\B\4\X14:Typedef declarations\X${}\mathrel+\E{}$\6
+\&{typedef} ${}\&{int}({*}\&{IntFuncPtr})(\&{void}){}$;\7
+\&{typedef} ${}\&{void}({*}\&{VoidFuncPtr})(\&{void}){}$;\7
+\&{typedef} \&{struct} \&{state\_t} ${}\{{}$\1\6
+\&{IntFuncPtr} \\{test};\6
+\&{struct} \&{state\_t} ${}{*}\\{next};{}$\6
+\&{VoidFuncPtr} \\{attribute};\6
+\&{short} \\{flags};\2\6
+${}\}{}$ \&{State}${},{}$ ${}{*}\&{StatePtr}{}$;\par
+\fi
+
+\M{55}This is the actual code that runs the state machines.  It works its way
+down through the list of states that \PB{\|s} points to, running test
+conditions until one returns \PB{\.{TRUE}}.  Then it runs the attribute
+and returns the state associated with that test.
+
+\Y\B\4\D$\.{FSM\_RERUN}$ \5
+\T{\^0001}\par
+\Y\B\1\1\&{StatePtr} \\{fsm}(\&{StatePtr} \|s)\2\2\6
+${}\{{}$\1\6
+\&{for} ( ;  ; \,)\5
+${}\{{}$\1\6
+\&{while} ${}(\R\|s\MG\\{test}(\,)){}$\5
+${}\{{}$\1\6
+${}\|s\PP;{}$\6
+\4${}\}{}$\2\6
+${}\|s\MG\\{attribute}(\,);{}$\6
+\&{if} ${}(\R(\|s\MG\\{flags}\AND\.{FSM\_RERUN})){}$\1\5
+\&{break};\2\6
+${}\|s\K\|s\MG\\{next};{}$\6
+\4${}\}{}$\2\6
+\&{return} \|s${}\MG\\{next};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{56}This section contains some simple universally useful tests and
+attributes.
+
+\Y\B\1\1\&{int} \\{True}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} \.{TRUE};\6
+\4${}\}{}$\2\7
+\1\1\&{int} \\{False}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} \.{FALSE};\6
+\4${}\}{}$\2\7
+\1\1\&{void} \\{Null}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{57}\B\X4:Function prototypes\X${}\mathrel+\E{}$\6
+\&{StatePtr} \\{fsm}(\&{StatePtr} \|s);\6
+\&{int} \\{True}(\&{void});\6
+\&{int} \\{False}(\&{void});\6
+\&{void} \\{Null}(\&{void});\par
+\fi
+
+\M{58}Here is the top-level state machine for \TT .
+
+\Y\B\&{State} \\{InitialState}[\,] $\K$ \6
+${}\{{}$\1\6
+${}\{\\{True},\39\\{IntroScreen},\39\\{Initialize},\39\T{0}\}{}$\6
+\4${}\}{}$\2\6
+;\7
+\&{State} \\{IntroScreen}[\,]${}\K\{{}$\6
+${}\{\\{DoneWithIntro},\39\\{PathPlay},\39\\{InitGame},\39\T{0}\},{}$\6
+${}\{\\{True},\39\\{IntroScreen},\39\\{Null},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{PathPlay}[\,]${}\K\{{}$\6
+${}\{\\{Dead},\39\\{DeathScreen},\39\\{StartDeathSequence},\39\T{0}\},{}$\6
+${}\{\\{Win},\39\\{VictoryScreen},\39\\{StartVictorySequence},\39\T{0}\},{}$\6
+${}\{\\{AtNode},\39\\{NodePlay},\39\\{InitNode},\39\T{0}\},{}$\6
+${}\{\\{True},\39\\{PathPlay},\39\\{RunPath},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{VictoryScreen}[\,]${}\K\{{}$\6
+${}\{\\{DoneVictory},\39\\{IntroScreen},\39\\{Null},\39\T{0}\},{}$\6
+${}\{\\{True},\39\\{VictoryScreen},\39\\{RunVictoryScreen},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{DeathScreen}[\,]${}\K\{{}$\6
+${}\{\\{DoneDeath},\39\\{IntroScreen},\39\\{Null},\39\T{0}\},{}$\6
+${}\{\\{True},\39\\{DeathScreen},\39\\{RunDeathScreen},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{NodePlay}[\,]${}\K\{{}$\6
+${}\{\\{Dead},\39\\{DeathScreen},\39\\{StartDeathSequence},\39\T{0}\},{}$\6
+${}\{\\{Win},\39\\{VictoryScreen},\39\\{StartVictorySequence},\39\T{0}\},{}$\6
+${}\{\\{AtPath},\39\\{PathPlay},\39\\{InitPath},\39\T{0}\},{}$\6
+${}\{\\{True},\39\\{NodePlay},\39\\{RunNode},\39\T{0}\}{}$\6
+${}\}{}$;\Y\par
+\fi
+
+\M{59}Here are the tests that go with it.
+
+\Y\B\1\1\&{int} \\{DoneWithIntro}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} \.{TRUE};\6
+\4${}\}{}$\2\7
+\1\1\&{int} \\{Dead}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} \.{FALSE};\6
+\4${}\}{}$\2\7
+\1\1\&{int} \\{Win}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} \.{FALSE};\6
+\4${}\}{}$\2\7
+\1\1\&{int} \\{AtNode}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} \.{FALSE};\6
+\4${}\}{}$\2\7
+\1\1\&{int} \\{DoneVictory}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} \.{FALSE};\6
+\4${}\}{}$\2\7
+\1\1\&{int} \\{DoneDeath}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} \.{FALSE};\6
+\4${}\}{}$\2\7
+\1\1\&{int} \\{AtPath}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} \.{FALSE};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{60}And here are the attributes
+\Y\B\1\1\&{void} \\{Initialize}(\,)\2\2\6
+${}\{\,\}{}$\7
+\1\1\&{void} \\{StartDeathSequence}(\,)\2\2\6
+${}\{\,\}{}$\7
+\1\1\&{void} \\{RunDeathScreen}(\,)\2\2\6
+${}\{\,\}{}$\7
+\1\1\&{void} \\{StartVictorySequence}(\,)\2\2\6
+${}\{\,\}{}$\7
+\1\1\&{void} \\{RunVictoryScreen}(\,)\2\2\6
+${}\{\,\}{}$\7
+\1\1\&{void} \\{InitNode}(\,)\2\2\6
+${}\{\,\}{}$\7
+\1\1\&{void} \\{RunNode}(\,)\2\2\6
+${}\{\,\}{}$\par
+\fi
+
+\M{61}This attribute does initialization for a new game.
+
+\Y\B\1\1\&{void} \\{InitGame}(\,)\2\2\6
+${}\{{}$\1\6
+\X7:Initialize the game\X\6
+${}\\{currentPath}\K{\AND}\\{p1\_1};{}$\6
+\\{InitPath}(\,);\6
+\4${}\}{}$\2\par
+\fi
+
+\M{62}\B\X4:Function prototypes\X${}\mathrel+\E{}$\6
+\&{State} \\{InitialState}[\,];\6
+\&{State} \\{IntroScreen}[\,];\6
+\&{State} \\{PathPlay}[\,];\6
+\&{State} \\{VictoryScreen}[\,];\6
+\&{State} \\{DeathScreen}[\,];\6
+\&{State} \\{NodePlay}[\,];\7
+\&{int} \\{DoneWithIntro}(\&{void});\6
+\&{int} \\{Dead}(\&{void});\6
+\&{int} \\{Win}(\&{void});\6
+\&{int} \\{AtNode}(\&{void});\6
+\&{int} \\{DoneVictory}(\&{void});\6
+\&{int} \\{DoneDeath}(\&{void});\6
+\&{int} \\{AtPath}(\&{void});\7
+\&{void} \\{Initialize}(\&{void});\6
+\&{void} \\{InitGame}(\&{void});\6
+\&{void} \\{StartDeathSequence}(\&{void});\6
+\&{void} \\{StartVictorySequence}(\&{void});\6
+\&{void} \\{InitNode}(\&{void});\6
+\&{void} \\{RunPath}(\&{void});\6
+\&{void} \\{RunVictoryScreen}(\&{void});\6
+\&{void} \\{RunDeathScreen}(\&{void});\6
+\&{void} \\{InitPath}(\&{void});\6
+\&{void} \\{RunNode}(\&{void});\6
+$\I{}$\par
+\fi
+
+\N{1}{63}The Input/Output System.  This system is conceptually a separate,
+asynchronous peripheral processor with the responsibility of providing system
+I/O services.  The procedure \PB{\\{DoIO}(\,)} should be called in some regular
+fashion
+(probably in the vertical blank interrupt) in order to satisfy main process
+requests.
+
+\fi
+
+\M{64}These are some constants for the internal use of the I/O system.
+
+\Y\B\4\D$\.{IOR\_READ\_CONTROLLERS}$ \5
+\T{1}\par
+\B\4\D$\.{IOR\_SEND\_SPRITE\_CONTROL}$ \5
+\T{2}\par
+\B\4\D$\.{IOR\_SEND\_PALETTES}$ \5
+\T{3}\par
+\B\4\D$\.{IOR\_SEND\_BLOCK\_16}$ \5
+\T{4}\par
+\B\4\D$\.{IOR\_SEND\_BLOCK\_32}$ \5
+\T{5}\par
+\B\4\D$\.{IOR\_SEND\_SCROLLS}$ \5
+\T{6}\par
+\B\4\D$\.{IOR\_SEND\_A\_SCROLLS}$ \5
+\T{7}\par
+\B\4\D$\.{IOR\_SEND\_B\_SCROLLS}$ \5
+\T{8}\par
+\B\4\D$\.{IOR\_SEND\_COLUMN}$ \5
+\T{9}\par
+\B\4\D$\\{IOReqSize}$ \5
+\T{8}\par
+\B\4\D$\\{IOBufferCapacity}$ \5
+\T{32}\par
+\B\4\D$\\{IOBufferSize}$ \5
+$(\\{IOReqSize}*\\{IOBufferCapacity}{}$)\par
+\fi
+
+\M{65}\B\X14:Typedef declarations\X${}\mathrel+\E{}$\6
+\&{typedef} \&{unsigned} \&{long} \&{ULONG};\6
+\&{typedef} \&{unsigned} \&{char} \&{UCHAR};\par
+\fi
+
+\M{66}\B\X4:Function prototypes\X${}\mathrel+\E{}$\6
+\&{void} \\{DoIO}(\&{void});\par
+\fi
+
+\M{67}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{short} \\{IORequestBuffer}[\\{IOBufferSize}];\6
+\&{short} \\{IORequestPointer};\6
+\&{int} \\{ip};\C{ i/o request buffer 'pointer' }\6
+\&{unsigned} \&{char} \\{bStick1};\6
+\&{unsigned} \&{char} \\{cStick1};\6
+\&{unsigned} \&{char} \\{dStick1};\6
+\&{unsigned} \&{char} \\{bStick2};\6
+\&{unsigned} \&{char} \\{cStick2};\6
+\&{unsigned} \&{char} \\{dStick2};\par
+\fi
+
+\M{68}This is the procedure that actually performs the input and output that
+has
+been requested and queued up.  If \PB{\.{TIMING}} is defined \PB{\.{FALSE}}, it
+will turn
+color 0, palette 0 red on entry and black on exit.
+
+\Y\B\1\1\&{void} \\{DoIO}(\,)\2\2\6
+${}\{{}$\1\6
+\&{short} \\{size};\6
+\&{unsigned} \&{char} ${}{*}\\{srcptr};{}$\6
+\&{unsigned} \&{char} ${}{*}\\{dstptr};{}$\6
+\8\#\&{if} \.{TIMING}\7
+${}\\{VDPPort}.\\{control}.\|l\K\T{\^c0000000};{}$\6
+${}\\{VDPPort}.\\{data}.\|w\K\T{\^00f};{}$\6
+\8\#\&{endif}\6
+\&{while} ${}(\\{ip}\I\\{IORequestPointer}){}$\5
+${}\{{}$\1\6
+\X69:Process the I/O request:iosys\X\6
+${}\\{ip}\K(\\{ip}+\\{IOReqSize})\MOD\\{IOBufferSize};{}$\6
+\4${}\}{}$\2\6
+\8\#\&{if} \.{TIMING}\6
+${}\\{VDPPort}.\\{control}.\|l\K\T{\^c0000000};{}$\6
+${}\\{VDPPort}.\\{data}.\|w\K\T{\^000};{}$\6
+\8\#\&{endif}\6
+\4${}\}{}$\2\par
+\fi
+
+\M{69}\B\X69:Process the I/O request:iosys\X${}\E{}$\6
+\&{switch} (\\{IORequestBuffer}[\\{ip}]) $\{{}$\6
+\&{case} \.{IOR\_READ\_CONTROLLERS}: \X70:Read the controllers:iosys\X\, %
+\&{break};\6
+\&{case} \.{IOR\_SEND\_SPRITE\_CONTROL}: \X71:Send the sprite control block to
+the VDP:iosys\X\, \&{break};\6
+\&{case} \.{IOR\_SEND\_PALETTES}: \X72:Send palette data to the VDP:iosys\X\, %
+\&{break};\6
+\&{case} \.{IOR\_SEND\_BLOCK\_16}: \X73:Send block specified by 16 bit address
+to the VDP:iosys\X\, \&{break};\6
+\&{case} \.{IOR\_SEND\_BLOCK\_32}: \X74:Send block specified by 32 bit address
+to the VDP:iosys\X\, \&{break};\6
+\&{case} \.{IOR\_SEND\_SCROLLS}: \X75:Send new scroll values for both
+playfields to the VDP:iosys\X\, \&{break};\6
+\&{case} \.{IOR\_SEND\_A\_SCROLLS}: \X76:Send new scroll values for playfield A
+to the VDP:iosys\X\, \&{break};\6
+\&{case} \.{IOR\_SEND\_B\_SCROLLS}: \X77:Send new scroll values for playfield B
+to the VDP:iosys\X\, \&{break};\6
+\&{case} \.{IOR\_SEND\_COLUMN}: \X78:Send block to VDP display column:iosys\X\,
+\&{break};\6
+\4\&{default}:\5
+\&{break};\6
+$\}{}$\par
+\U68.\fi
+
+\M{70}\B\X70:Read the controllers:iosys\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{srcptr}\K{*}{}$((\&{unsigned} \&{char} ${}{*}{*})(\\{IORequestBuffer}+%
+\\{ip}+\T{1}));{}$\6
+\\{ReadHWControllers}(\,);\6
+${}{*}\\{srcptr}\PP\K\\{bStick1};{}$\6
+${}{*}\\{srcptr}\PP\K\\{cStick1};{}$\6
+${}{*}\\{srcptr}\PP\K\\{dStick1};{}$\6
+${}{*}\\{srcptr}\PP\K\\{bStick2};{}$\6
+${}{*}\\{srcptr}\PP\K\\{cStick2};{}$\6
+${}{*}\\{srcptr}\K\\{dStick2};{}$\6
+\4${}\}{}$\2\par
+\U69.\fi
+
+\M{71}\B\X71:Send the sprite control block to the VDP:iosys\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{srcptr}\K{*}{}$((\&{UCHAR} ${}{*}{*})(\\{IORequestBuffer}+\\{ip}+%
+\T{1}));{}$\6
+\\{gemsdmastart}(\,);\6
+${}\\{InitDMA}((\&{long})\,\\{srcptr},\39(\&{long})\,\.{SPRITE\_ATTRIBUTE\_VDP%
+\_ADDRESS},\39\T{640\$L});{}$\6
+\\{gemsdmaend}(\,);\6
+\4${}\}{}$\2\par
+\U69.\fi
+
+\M{72}\B\X72:Send palette data to the VDP:iosys\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{srcptr}\K{}$(\&{UCHAR} ${}{*})(({*}{}$((\&{ULONG} ${}{*})(%
+\\{IORequestBuffer}+\\{ip}+\T{1})))\GG\T{1});{}$\6
+${}\\{VDPPort}.\\{control}.\|l\K\T{\^93409400}{}$;\C{ R19, R20 (DMA length) }\6
+${}\\{VDPPort}.\\{control}.\|w\K\T{\^9500}+((\&{long})\,\\{srcptr}\AND\T{%
+\^ff});{}$\6
+${}\\{VDPPort}.\\{control}.\|w\K\T{\^9600}+(((\&{long})\,\\{srcptr}\AND\T{%
+\^ff00})\GG\T{8});{}$\6
+${}\\{VDPPort}.\\{control}.\|w\K\T{\^9700}+(((\&{long})\,\\{srcptr}\AND\T{%
+\^7f0000})\GG\T{16});{}$\6
+${}\\{VDPPort}.\\{control}.\|l\K\T{\^c0000080};{}$\6
+\4${}\}{}$\2\par
+\U69.\fi
+
+\M{73}\B\X73:Send block specified by 16 bit address to the VDP:iosys\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{srcptr}\K{}$(\&{UCHAR} ${}{*})(\T{\^00ff0000}\OR\\{IORequestBuffer}[%
+\\{ip}+\T{1}]);{}$\6
+${}\\{dstptr}\K{}$(\&{UCHAR} ${}{*})\,\\{IORequestBuffer}[\\{ip}+\T{2}];{}$\6
+${}\\{size}\K\\{IORequestBuffer}[\\{ip}+\T{3}];{}$\6
+\\{gemsdmastart}(\,);\6
+${}\\{InitDMA}((\&{long})\,\\{srcptr},\39(\&{long})\,\\{dstptr},\39(\&{long})\,%
+\\{size});{}$\6
+\\{gemsdmaend}(\,);\6
+\4${}\}{}$\2\par
+\U69.\fi
+
+\M{74}\B\X74:Send block specified by 32 bit address to the VDP:iosys\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{srcptr}\K{*}{}$((\&{unsigned} \&{char} ${}{*}{*})(\\{IORequestBuffer}+%
+\\{ip}+\T{1}));{}$\6
+${}\\{dstptr}\K{}$(\&{UCHAR} ${}{*})\,\\{IORequestBuffer}[\\{ip}+\T{3}];{}$\6
+${}\\{size}\K\\{IORequestBuffer}[\\{ip}+\T{4}];{}$\6
+\\{gemsdmastart}(\,);\6
+${}\\{InitDMA}((\&{long})\,\\{srcptr},\39(\&{long})\,\\{dstptr},\39(\&{long})\,%
+\\{size});{}$\6
+\\{gemsdmaend}(\,);\6
+\4${}\}{}$\2\par
+\U69.\fi
+
+\M{75}\B\X75:Send new scroll values for both playfields to the VDP:iosys\X${}%
+\E{}$\6
+${}\{{}$\1\6
+${}\\{VDPPort}.\\{control}.\|l\K\T{\^40000010};{}$\6
+${}\\{VDPPort}.\\{data}.\|w\K\\{IORequestBuffer}[\\{ip}+\T{1}];{}$\6
+${}\\{VDPPort}.\\{data}.\|w\K\\{IORequestBuffer}[\\{ip}+\T{2}];{}$\6
+\\{SetVDPDest}(\.{H\_SCROLL\_VDP\_ADDRESS});\6
+${}\\{VDPPort}.\\{data}.\|w\K\\{IORequestBuffer}[\\{ip}+\T{3}];{}$\6
+${}\\{VDPPort}.\\{data}.\|w\K\\{IORequestBuffer}[\\{ip}+\T{4}];{}$\6
+\4${}\}{}$\2\par
+\U69.\fi
+
+\M{76}\B\X76:Send new scroll values for playfield A to the VDP:iosys\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{VDPPort}.\\{control}.\|l\K\T{\^40000010};{}$\6
+${}\\{VDPPort}.\\{data}.\|w\K\\{IORequestBuffer}[\\{ip}+\T{1}];{}$\6
+\\{SetVDPDest}(\.{H\_SCROLL\_VDP\_ADDRESS});\6
+${}\\{VDPPort}.\\{data}.\|w\K\\{IORequestBuffer}[\\{ip}+\T{2}];{}$\6
+\4${}\}{}$\2\par
+\U69.\fi
+
+\M{77}\B\X77:Send new scroll values for playfield B to the VDP:iosys\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{VDPPort}.\\{control}.\|l\K\T{\^40020010};{}$\6
+${}\\{VDPPort}.\\{data}.\|w\K\\{IORequestBuffer}[\\{ip}+\T{1}];{}$\6
+${}\\{SetVDPDest}(\.{H\_SCROLL\_VDP\_ADDRESS}+\T{2});{}$\6
+${}\\{VDPPort}.\\{data}.\|w\K\\{IORequestBuffer}[\\{ip}+\T{2}];{}$\6
+\4${}\}{}$\2\par
+\U69.\fi
+
+\M{78}\B\X78:Send block to VDP display column:iosys\X${}\E{}$\6
+${}\{{}$\1\6
+${}\\{srcptr}\K{*}{}$((\&{unsigned} \&{char} ${}{*}{*})(\\{IORequestBuffer}+%
+\\{ip}+\T{1}));{}$\6
+${}\\{dstptr}\K{}$(\&{UCHAR} ${}{*})\,\\{IORequestBuffer}[\\{ip}+\T{3}];{}$\6
+${}\\{VDPPort}.\\{control}.\|w\K\T{\^8f80};{}$\6
+\\{gemsdmastart}(\,);\6
+${}\\{InitDMA}((\&{long})\,\\{srcptr},\39(\&{long})\,\\{dstptr},\39(\&{long})\,%
+\T{64});{}$\6
+\\{gemsdmaend}(\,);\6
+${}\\{VDPPort}.\\{control}.\|w\K\T{\^8f02};{}$\6
+\4${}\}{}$\2\par
+\U69.\fi
+
+\N{1}{79}Input/Output System Client Interface.   These are the macro
+definitions for
+the various ways to invoke the I/O system from
+within a user program.  It is important to understand that these macros do not
+directly cause the requested I/O to occur, they merely queue the request for
+later handling.  They also do not test for buffer overflow, so the user must
+assure that \PB{\\{IOBufferCapacity}} is sufficiently large.   The
+buffer is circular, so if an overflow occurs it will not crash the program, but
+it will lose many requests.
+
+\fi
+
+\M{80}This macro causes the I/O system to read the Genesis joypads and to write
+the
+resulting data into the six bytes at \PB{${*}\\{addr}$}  The data is formatted
+as three
+bytes for controller A, then three bytes for controller B.  The three bytes
+are, first, the actual button states from the controller, with 1 indicating
+that the button is depressed.  Second, the state of the controller in the
+previous cycle, and third, a byte containing 1's where the raw data has a
+rising edge.
+
+\Y\B\4\D$\\{ReadControllers}(\\{addr})$ \6
+${}\{{}$\1\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}]\K\.{IOR\_READ\_CONTROLLERS};{}$\6
+${}{*}{}$((\&{ULONG} ${}{*}{*})(\\{IORequestBuffer}+\\{IORequestPointer}+%
+\T{1}))\K{}$(\&{ULONG} ${}{*})(\\{addr});{}$\6
+${}\\{IORequestPointer}\K(\\{IORequestPointer}+\\{IOReqSize})\MOD%
+\\{IOBufferSize};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{81}This macro causes the I/O system to send the 640 bytes at \PB{${*}%
+\\{addr}$} to the VDP
+location specified by the constant \PB{\.{SPRITE\_ATTRIBUTE\_VDP\_ADDRESS}}.
+
+\Y\B\4\D$\\{SendSpriteControl}(\\{addr})$ \6
+${}\{{}$\1\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}]\K\.{IOR\_SEND\_SPRITE%
+\_CONTROL};{}$\6
+${}{*}{}$((\&{ULONG} ${}{*}{*})(\\{IORequestBuffer}+\\{IORequestPointer}+%
+\T{1}))\K{}$(\&{ULONG} ${}{*})(\\{addr});{}$\6
+${}\\{IORequestPointer}\K(\\{IORequestPointer}+\\{IOReqSize})\MOD%
+\\{IOBufferSize};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{82}This macro causes the I/O system to send the 128 bytes at \PB{${*}%
+\\{addr}$} to the VDP
+color ram.
+
+\Y\B\4\D$\\{SendPalettes}(\\{addr})$ \6
+${}\{{}$\1\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}]\K\.{IOR\_SEND\_PALETTES};{}$\6
+${}{*}{}$((\&{ULONG} ${}{*}{*})(\\{IORequestBuffer}+\\{IORequestPointer}+%
+\T{1}))\K{}$(\&{ULONG} ${}{*})(\\{addr});{}$\6
+${}\\{IORequestPointer}\K(\\{IORequestPointer}+\\{IOReqSize})\MOD%
+\\{IOBufferSize};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{83}This macro causes the I/O system to send the \PB{\\{size}} bytes at
+\PB{${*}(\\{addr}+\T{\^00ff0000})$} to the VDP location specified by \PB{%
+\\{target}}.
+
+\Y\B\4\D$\\{SendBlock16}(\\{addr},\\{target},\\{size})$ \6
+${}\{{}$\1\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}]\K\.{IOR\_SEND\_BLOCK\_16};{}$\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}+\T{1}]\K((\&{short})((\&{long})\,%
+\\{addr}\AND\T{\^ffff}));{}$\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}+\T{2}]\K(\\{target});{}$\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}+\T{3}]\K(\\{size});{}$\6
+${}\\{IORequestPointer}\K(\\{IORequestPointer}+\\{IOReqSize})\MOD%
+\\{IOBufferSize};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{84}This macro causes the I/O system to send the \PB{\\{size}} bytes at %
+\PB{${*}\\{addr}$} to the
+VDP location specified by \PB{\\{target}}.
+
+\Y\B\4\D$\\{SendBlock32}(\\{addr},\\{target},\\{size})$ \6
+${}\{{}$\1\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}]\K\.{IOR\_SEND\_BLOCK\_32};{}$\6
+${}{*}{}$((\&{ULONG} ${}{*}{*})(\\{IORequestBuffer}+\\{IORequestPointer}+%
+\T{1}))\K{}$(\&{ULONG} ${}{*})(\\{addr});{}$\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}+\T{3}]\K(\\{target});{}$\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}+\T{4}]\K(\\{size});{}$\6
+${}\\{IORequestPointer}\K(\\{IORequestPointer}+\\{IOReqSize})\MOD%
+\\{IOBufferSize};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{85}This macro causes the I/O system to update the scrolling values for both
+playfields.  It supports only single-piece scrolling of the playfield, not any
+of the per-line or per-cell modes.
+
+\Y\B\4\D$\\{SendScrolls}(\\{ay},\\{by},\\{ax},\\{bx})$ \6
+${}\{{}$\1\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}]\K\.{IOR\_SEND\_SCROLLS};{}$\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}+\T{1}]\K(\\{ay});{}$\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}+\T{2}]\K(\\{by});{}$\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}+\T{3}]\K(\\{ax});{}$\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}+\T{4}]\K(\\{bx});{}$\6
+${}\\{IORequestPointer}\K(\\{IORequestPointer}+\\{IOReqSize})\MOD%
+\\{IOBufferSize};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{86}This macro causes the I/O system to update the scrolling values for
+playfield A.  It supports only single-piece scrolling of the playfield, not any
+of the per-line or per-cell modes.
+
+\Y\B\4\D$\\{SendAScrolls}(\\{ay},\\{ax})$ \6
+${}\{{}$\1\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}]\K\.{IOR\_SEND\_A\_SCROLLS};{}$\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}+\T{1}]\K(\\{ay});{}$\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}+\T{2}]\K(\\{ax});{}$\6
+${}\\{IORequestPointer}\K(\\{IORequestPointer}+\\{IOReqSize})\MOD%
+\\{IOBufferSize};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{87}This macro causes the I/O system to update the scrolling values for
+playfield B.  It supports only single-piece scrolling of the playfield, not any
+of the per-line or per-cell modes.
+
+\Y\B\4\D$\\{SendBScrolls}(\\{by},\\{bx})$ \6
+${}\{{}$\1\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}]\K\.{IOR\_SEND\_B\_SCROLLS};{}$\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}+\T{1}]\K(\\{by});{}$\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}+\T{2}]\K(\\{bx});{}$\6
+${}\\{IORequestPointer}\K(\\{IORequestPointer}+\\{IOReqSize})\MOD%
+\\{IOBufferSize};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{88}This macro causes the I/O system to update a column of VDP display
+memory.
+
+\Y\B\4\D$\\{SendColumn}(\\{addr},\\{target})$ \6
+${}\{{}$\1\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}]\K\.{IOR\_SEND\_COLUMN};{}$\6
+${}{*}{}$((\&{ULONG} ${}{*}{*})(\\{IORequestBuffer}+\\{IORequestPointer}+%
+\T{1}))\K{}$(\&{ULONG} ${}{*})(\\{addr});{}$\6
+${}\\{IORequestBuffer}[\\{IORequestPointer}+\T{3}]\K(\\{target});{}$\6
+${}\\{IORequestPointer}\K(\\{IORequestPointer}+\\{IOReqSize})\MOD%
+\\{IOBufferSize};{}$\6
+\4${}\}{}$\2\6
+$\I{}$\par
+\fi
+
+\N{1}{89}System Initialization and Interrupt Handling.
+
+This section contains the data required in the first 512 bytes of the
+Genesis' address space.  The first half contains the coldstart and exception
+vectors, and the second half is Sega's standard signature record.
+
+\Y\B\8\# \&{pragma} \&{dsection} $.$ \\{vectors} \6
+\&{VoidFuncPtr} \\{vectors}[\,]${}\K\{(\&{VoidFuncPtr})\,\T{\^fffff800},{}$\C{
+0 initial supervisor stack pointer }\6
+\\{main}${},{}$\C{  1 initial program counter }\6
+\\{ErrorHandler}${},{}$\C{  2 Bus error }\6
+\\{ErrorHandler}${},{}$\C{  3 Address error }\6
+\\{ErrorHandler}${},{}$\C{  4 Illegal instruction }\6
+\\{ErrorHandler}${},{}$\C{  5 Division by zero }\6
+\\{ErrorHandler}${},{}$\C{  6 CHK instruction }\6
+\\{ErrorHandler}${},{}$\C{  7 TRAPV instruction }\6
+\\{ErrorHandler}${},{}$\C{  8 Privilege violation }\6
+\\{ErrorHandler}${},{}$\C{  9 Trace }\6
+\\{ErrorHandler}${},{}$\C{ 10 Line A emulator }\6
+\\{ErrorHandler}${},{}$\C{ 11 Line F emulator }\6
+\\{ErrorHandler}${},{}$\C{ 12 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 13 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 14 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 15 Uninitialized interrupt }\6
+\\{ErrorHandler}${},{}$\C{ 16 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 17 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 18 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 19 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 20 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 21 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 22 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 23 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 24 Spurious interrupts }\6
+\\{ErrorHandler}${},{}$\C{ 25 Level 1 autovector }\6
+\\{ErrorHandler}${},{}$\C{ 26 Level 2 autovector }\6
+\\{ErrorHandler}${},{}$\C{ 27 Level 3 autovector }\6
+\\{HBLHandler}${},{}$\C{ 28 Level 4 autovector }\6
+\\{ErrorHandler}${},{}$\C{ 29 Level 5 autovector }\6
+\\{VBLHandler}${},{}$\C{ 30 Level 6 autovector }\6
+\\{ErrorHandler}${},{}$\C{ 31 Level 7 autovector }\6
+\\{ErrorHandler}${},{}$\C{ 32 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 33 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 34 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 35 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 36 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 37 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 38 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 39 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 40 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 41 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 42 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 43 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 44 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 45 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 46 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 47 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 48 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 49 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 50 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 51 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 52 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 53 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 54 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 55 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 56 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 57 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 58 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 59 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 60 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 61 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 62 Reserved }\6
+\\{ErrorHandler}${},{}$\C{ 63 Reserved }\6
+${}\};$ \6
+\8\# \&{pragma} \&{dsection} $.$ \\{coding} \6
+\&{char} \\{codingblock1}[\,]${}\K{}$\6
+\.{"SEGA\ MEGA\ DRIVE\ "}\6
+\.{"(C)SEGA\ 1993\ AUG"}\6
+\.{"TREASURE\ TALES\ \ "}\6
+\.{"\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "}\6
+\.{"\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "}\6
+\.{"TREASURE\ TALES\ \ "}\6
+\.{"\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "}\6
+\.{"\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "}\6
+\.{"GM\ 00001014-00\\0"};\6
+\&{char} \\{codingblock3}[\,]${}\K{}$\6
+\.{"J\ \ \ \ \ \ \ \ \ \ \ \ \ \ "};\6
+\&{long} \\{codingblock4}[\,]${}\K\{\T{\^00000000},\39\T{\^0007ffff},\39\T{%
+\^00ff0000},\39\T{\^00ffffff}\};{}$\6
+\&{char} \\{codingblock5}[\,]${}\K{}$\6
+\.{"\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "}\6
+\.{"\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "}\6
+\.{"\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "}\6
+\.{"\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "}\6
+\.{"JUE\ \ \ \ \ \ \ \ \ \ \ \ "}; \6
+\8\# \&{pragma} \&{dsection} $.$ \\{text} \par
+\fi
+
+\M{90}This is the system's main vertical blank interrupt handler.  In its
+present
+life it just bumps the system timer, sets the flag to indicate that it has run,
+and invokes the I/O system.  The startup code {\it must} be sure to have all
+the necessary initialization for the I/O system before interrupts are enabled.
+
+The Sierra C compiler (which we are compiling this with)
+doesn't support any special syntax for procedures that are invoked by processor
+exceptions, so we need to maintain stack coherence and provide an RTE by hand.
+Fortunately, the compiler does provide a pass-through assembly language
+construct.
+
+\Y\B\1\1\&{void} \\{VBLHandler}(\,)\2\2\6
+${}\{{}$\1\6
+\&{asm} ${}(\.{"\ movem.l\ a0-a6/d0-d}\)\.{7,-(sp)"},\39\T{4}){}$\1\5
+;\2\6
+${}\\{tickCounter}\PP;{}$\6
+${}\\{vblFlag}\K\T{1};{}$\6
+\\{DoIO}(\,);\6
+\&{asm} ${}(\.{"\ movem.l\ (sp)+,a0-a}\)\.{6/d0-d7"},\39\T{4}){}$\1\5
+;\2\6
+\&{asm} (\.{"\ unlk\ a6"})\1\5
+;\2\6
+\&{asm} ${}(\.{"\ rte"},\39\T{2}){}$\1\5
+;\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{91}This is the system horizontal interrupt handler.  Its only function at
+present is to set the processor interrupt mask to prevent itself from being
+invoked again.
+
+\Y\B\1\1\&{void} \\{HBLHandler}(\,)\2\2\6
+${}\{{}$\1\6
+\&{asm} ${}(\.{"\ and.w\ \#\$f0ff,(sp)"},\39\T{4}){}$\1\5
+;\2\6
+\8\#\&{if} \T{0}\6
+\&{asm} ${}(\.{"\ or.w\ \#\$0500,(sp)"},\39\T{4}){}$\1\5
+;\2\6
+\8\#\&{endif}\6
+\&{asm} (\.{"\ unlk\ a6"})\1\5
+;\2\6
+\&{asm} ${}(\.{"\ rte"},\39\T{2}){}$\1\5
+;\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{92}This is the system error handler.  It doesn't do much.
+
+\Y\B\1\1\&{void} \\{ErrorHandler}(\,)\2\2\6
+${}\{{}$\1\6
+\&{while} (\T{1})\1\5
+;\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{93}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{volatile} \&{long} \\{tickCounter};\6
+\&{volatile} \&{int} \\{vblFlag};\par
+\fi
+
+\M{94}\B\X4:Function prototypes\X${}\mathrel+\E{}$\6
+\&{void} \\{VBLHandler}(\&{void});\6
+\&{void} \\{HBLHandler}(\&{void});\6
+\&{void} \\{ErrorHandler}(\&{void});\par
+\fi
+
+\M{95}Here are some constants to ease working with the VDP
+\Y\B\4\D$\.{VRAMWR}$ \5
+\T{\^40000000}\par
+\B\4\D$\.{VRAMRD}$ \5
+\T{\^00000000}\par
+\B\4\D$\.{VSRAMWR}$ \5
+\T{\^40000010}\par
+\B\4\D$\.{VSRAMRD}$ \5
+\T{\^00000010}\par
+\B\4\D$\.{CRAMWR}$ \5
+\T{\^c0000000}\par
+\B\4\D$\.{CRAMRD}$ \5
+\T{\^00000020}\par
+\fi
+
+\M{96}\B\X96:Initialize VDP registers\X${}\E{}$\6
+${}\{{}$\1\6
+\&{int} \|i;\7
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{19};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{VDPPort}.\\{control}.\|w\K\\{vdpRegisters}[\|i];{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U98.\fi
+
+\M{97}These are the initial settings for the VDP registers,
+
+\Y\B\4\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{short} \\{vdpRegisters}[\,]${}\K\{\T{\^8004},{}$\C{ 0x8014, }\6
+\T{\^8174}${},\39\T{\^8200}+(\.{FG}\GG\T{10}),\39\T{\^8300}+(\.{SIDEBAR}\GG%
+\T{10}),\39\T{\^8400}+(\.{BG}\GG\T{13}),\39\T{\^8500}+(\.{SPRITE\_ATTRIBUTES}%
+\GG\T{9}),\39\T{\^8600},\39\T{\^8700},\39\T{\^8800},\39\T{\^8900},\39\T{%
+\^8a00},\39\T{\^8b08},{}$\C{ 0x8b00, }\6
+\T{\^8c81}${},\39\T{\^8d00}+(\.{HSCROLL}\GG\T{10}),\39\T{\^8e00},\39\T{\^8f02},%
+\39\T{\^9001},\39\T{\^9100},\39\T{\^9200},\}{}$;\par
+\fi
+
+\M{98}\B\X98:Initialize the VDP\X${}\E{}$\6
+\X96:Initialize VDP registers\X\6
+\X100:Clear VRAM\X\6
+\X101:Clear color RAM\X\6
+\X102:Clear vertical scroll RAM\X\par
+\U103.\fi
+
+\M{99}\B\X99:Clear work RAM\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i;\7
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{16384};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+((\&{long} ${}{*})\,\T{\^00ff0000})[\|i]\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U103.\fi
+
+\M{100}\B\X100:Clear VRAM\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i;\7
+${}\\{VDPPort}.\\{control}.\|l\K\.{VRAMWR};{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{32768};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{VDPPort}.\\{data}.\|w\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U98.\fi
+
+\M{101}\B\X101:Clear color RAM\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i;\7
+${}\\{VDPPort}.\\{control}.\|l\K\.{CRAMWR};{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{64};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{VDPPort}.\\{data}.\|w\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U98.\fi
+
+\M{102}\B\X102:Clear vertical scroll RAM\X${}\E{}$\6
+${}\{{}$\1\6
+\&{register} \&{int} \|i;\7
+${}\\{VDPPort}.\\{control}.\|l\K\.{VSRAMWR};{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{40};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{VDPPort}.\\{data}.\|w\K\T{0};{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U98.\fi
+
+\M{103}\B\X103:Hardware initialization\X${}\E{}$\6
+\&{asm} ${}(\.{"\ move.w\ \#\$2700,SR"},\39\T{4}){}$\1\5
+;\C{ Disable interrupts }\2\6
+\&{if} ${}({*}{}$(\&{unsigned} \&{char} ${}{*})\,\.{VERSION}\AND\T{\^0f}{}$)\1\6
+${}{*}{}$((\&{unsigned} \&{long} ${}{*})\,\.{WATCHDOG})\K\T{\^53454741}{}$;\C{
+Make the extortion circuit happy }\2\6
+\X104:Initialize the controller ports\X\6
+\X99:Clear work RAM\X\6
+\X98:Initialize the VDP\X\6
+${}\\{gemsinit}(\\{patchbank},\39\\{envbank},\39\\{seqbank},\39%
+\\{sampbank});{}$\6
+\&{asm} (\.{"\ move.w\ \#\$2000,SR"})\1\5
+;\C{ Enable interrupts }\2\par
+\U3.\fi
+
+\M{104}\B\X104:Initialize the controller ports\X${}\E{}$\6
+\&{asm} (\.{"\ moveq\ \#\$40,d0"})\1\5
+;\2\6
+\&{asm} (\.{"\ move.b\ d0,\$a10009"})\1\5
+;\C{ JOY1DDR }\2\6
+\&{asm} (\.{"\ move.b\ d0,\$a1000b"})\1\5
+;\C{ JOY2DDR }\2\6
+\&{asm} (\.{"\ move.b\ \#\$9f,\$a1000}\)\.{d"})\1\5
+;\C{ COMDDR }\2\6
+\&{asm} (\.{"\ move.b\ \#\$7f,\$a1000}\)\.{7"})\1\5
+;\C{ COMPORT }\2\par
+\U103.\fi
+
+\M{105}This routine causes the processor to halt until an interrupt is
+received, and
+then to check whether it was VBlank.
+
+\Y\B\1\1\&{void} \\{WaitTOF}(\,)\2\2\6
+${}\{{}$\6
+\8\#\&{if} \.{TIMING}\1\6
+${}\.{VCTRLL}\K\T{\^c0000000};{}$\6
+${}\.{VDATAW}\K\T{\^000};{}$\6
+\8\#\&{endif}\6
+${}\\{vblFlag}\K\T{0};{}$\6
+\&{while} ${}(\R\\{vblFlag}){}$\1\6
+\&{asm} ${}(\.{"\ stop\ \#\$2500"},\39\T{4}){}$\1\5
+;\2\2\6
+\8\#\&{if} \.{TIMING}\6
+${}\.{VCTRLL}\K\T{\^c0000000};{}$\6
+${}\.{VDATAW}\K\T{\^888};{}$\6
+\8\#\&{endif}\6
+\4${}\}{}$\2\par
+\fi
+
+\M{106}This routine reads the hardware controller ports and puts the results in
+\PB{\\{bStick}}, \PB{\\{cStick}}, and \PB{\\{dStick}}.
+
+\Y\B\1\1\&{void} \\{ReadHWControllers}(\,)\2\2\6
+${}\{{}$\1\6
+\&{asm} ${}(\.{"\ move.w\ \ \#\$2700,SR"},\39\T{4}){}$\1\5
+;\2\6
+\\{gemsholdz80}(\,);\6
+\&{asm} (\.{"\ lea\ \$a10003,a0"})\1\5
+;\C{ JOY1PORT }\2\6
+\X107:Read one controller\X\6
+\&{asm} (\.{"\ move.b\ d0,\_bStick1}\)\.{"})\1\5
+;\2\6
+\&{asm} (\.{"\ lea\ \$a10005,a0"})\1\5
+;\C{ JOY2PORT }\2\6
+\X107:Read one controller\X\6
+\&{asm} (\.{"\ move.b\ d0,\_bStick2}\)\.{"})\1\5
+;\2\6
+\&{asm} (\.{"\ move.w\ \#\$2000,SR"})\1\5
+;\2\6
+\\{gemsreleasez80}(\,);\6
+${}\\{dStick1}\K(\\{bStick1}\XOR\\{cStick1})\AND\\{bStick1};{}$\6
+${}\\{cStick1}\K\\{bStick1};{}$\6
+${}\\{dStick2}\K(\\{bStick2}\XOR\\{cStick2})\AND\\{bStick2};{}$\6
+${}\\{cStick2}\K\\{bStick2};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{107}\B\X107:Read one controller\X${}\E{}$\6
+\&{asm} (\.{"\ move.b\ \#0,(a0)"})\1\5
+;\2\6
+\&{asm} (\.{"\ nop"})\1\5
+;\2\6
+\&{asm} (\.{"\ nop"})\1\5
+;\2\6
+\&{asm} (\.{"\ move.b\ (a0),d0"})\1\5
+;\2\6
+\&{asm} (\.{"\ lsl.b\ \#2,d0"})\1\5
+;\2\6
+\&{asm} (\.{"\ andi.b\ \#\$c0,d0"})\1\5
+;\2\6
+\&{asm} (\.{"\ move.b\ \#\$40,(a0)"})\1\5
+;\2\6
+\&{asm} (\.{"\ nop"})\1\5
+;\2\6
+\&{asm} (\.{"\ nop"})\1\5
+;\2\6
+\&{asm} (\.{"\ move.b\ (a0),d1"})\1\5
+;\2\6
+\&{asm} (\.{"\ andi.b\ \#\$3f,d1"})\1\5
+;\2\6
+\&{asm} (\.{"\ or.b\ d1,d0"})\1\5
+;\2\6
+\&{asm} (\.{"\ not.b\ d0"})\1\5
+;\2\par
+\U106.\fi
+
+\M{108}\B\X4:Function prototypes\X${}\mathrel+\E{}$\6
+\&{void} \\{WaitTOF}(\&{void});\6
+\&{void} \\{SegaLogo}(\&{void});\6
+\&{void} \\{ReadHWControllers}(\&{void});\par
+\fi
+
+\N{1}{109}The SEGA logo.
+\Y\B\4\D$\.{LOGO1}$ \5
+$(\.{FG}+\T{\^61c}+\T{\^0000}{}$)\par
+\B\4\D$\.{LOGO2}$ \5
+$(\.{FG}+\T{\^61c}+\T{\^0080}{}$)\par
+\B\4\D$\.{LOGO3}$ \5
+$(\.{FG}+\T{\^61c}+\T{\^0100}{}$)\par
+\B\4\D$\.{LOGO4}$ \5
+$(\.{FG}+\T{\^61c}+\T{\^0180}{}$)\par
+\Y\B\1\1\&{void} \\{SegaLogo}(\,)\2\2\6
+${}\{{}$\1\6
+\&{short} ${}{*}\\{palette};{}$\6
+\&{int} \|i${},\39\|j;{}$\7
+${}\\{SendBlock32}(\\{logoData},\39\.{FG\_CELLS}+\T{32},\39\T{1600});{}$\6
+${}\\{palette}\K\\{AllocMem}(\T{128});{}$\6
+\&{for} ${}(\|i\K\\{logoColors}[\T{0}];{}$ ${}\|i<\\{logoColors}[\T{1}];{}$ ${}%
+\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{palette}[\|i]\K\\{logoColors}[\|i+\T{2}];{}$\6
+\4${}\}{}$\2\6
+${}\\{SendBlock32}(\\{logoMap},\39\.{LOGO1},\39\T{24});{}$\6
+${}\\{SendBlock32}(\\{logoMap}+\T{12},\39\.{LOGO2},\39\T{24});{}$\6
+${}\\{SendBlock32}(\\{logoMap}+\T{24},\39\.{LOGO3},\39\T{24});{}$\6
+${}\\{SendBlock32}(\\{logoMap}+\T{36},\39\.{LOGO4},\39\T{24});{}$\6
+\\{WaitTOF}(\,);\6
+${}\\{FadeIn}(\\{palette},\39\T{45});{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{31};{}$ ${}\|i\PP){}$\1\5
+\\{WaitTOF}(\,);\2\6
+\&{for} ${}(\|i\K\T{20};{}$ ${}\|i>\T{0};{}$ ${}\|i\MM){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{11};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{palette}[\T{2}+\|j]\K\\{logoColors}[\T{4}+\|i+\|j];{}$\6
+\4${}\}{}$\2\6
+\\{SendPalettes}(\\{palette});\6
+\\{WaitTOF}(\,);\6
+\\{WaitTOF}(\,);\6
+\\{WaitTOF}(\,);\6
+\\{WaitTOF}(\,);\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{27};{}$ ${}\|i\PP){}$\1\5
+\\{WaitTOF}(\,);\2\6
+${}\\{FadeOut}(\\{palette},\39\T{45});{}$\6
+\\{FreeMem}(\\{palette});\6
+\4${}\}{}$\2\6
+$\I{}$\par
+\fi
+
+\N{1}{110}Palette Utilities.  These routines provide color interpolation,
+palette
+interpolation, and palette fade in/fade out services.
+
+\fi
+
+\M{111}This routine does a linear interpolation between \PB{\\{target}} and %
+\PB{${*}\\{color}$},
+interpreted as Genesis color values.  It determines a color at
+point $time/duration$ between them.  It does not check that $time \le
+duration$, nor does it verify that $duration > 0$.
+
+\Y\B\1\1\&{void} \\{InterpolateColor}(\&{short} \\{target}${},\39{}$\&{short} %
+\\{time}${},\39{}$\&{short} \\{duration}${},\39{}$\&{short} ${}{*}\\{color})\2%
+\2{}$\6
+${}\{{}$\1\6
+\&{short} \\{dr}${},\39\\{dg},\39\\{db};{}$\6
+\&{short} \\{tr}${},\39\\{tg},\39\\{tb};{}$\6
+\&{short} \|r${},\39\|g,\39\|b;{}$\6
+\&{int} \|i;\7
+${}\|r\K{*}\\{color}\AND\T{\^00e};{}$\6
+${}\|g\K({*}\\{color}\AND\T{\^0e0})\GG\T{4};{}$\6
+${}\|b\K({*}\\{color}\AND\T{\^e00})\GG\T{8};{}$\6
+${}\\{tr}\K\\{target}\AND\T{\^00e};{}$\6
+${}\\{tg}\K(\\{target}\AND\T{\^0e0})\GG\T{4};{}$\6
+${}\\{tb}\K(\\{target}\AND\T{\^e00})\GG\T{8};{}$\6
+${}\\{dr}\K\|r-\\{tr}+\T{1};{}$\6
+${}\\{dg}\K\|g-\\{tg}+\T{1};{}$\6
+${}\\{db}\K\|b-\\{tb}+\T{1};{}$\6
+${}\|r\K\\{tr}+(\\{dr}*\\{time})/\\{duration};{}$\6
+${}\|g\K\\{tg}+(\\{dg}*\\{time})/\\{duration};{}$\6
+${}\|b\K\\{tb}+(\\{db}*\\{time})/\\{duration};{}$\6
+${}{*}\\{color}\K(\|r\AND\T{\^00e})\OR((\|g\AND\T{\^00e})\LL\T{4})\OR((\|b\AND%
+\T{\^00e})\LL\T{8});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{112}This routine uses \PB{\\{InterpolateColor}} to interpolate a full
+palette toward a
+given color.
+
+\Y\B\1\1\&{void} \\{InterpolatePalette}(\&{short} \\{target}${},\39{}$\&{short}
+\\{time}${},\39{}$\&{short} \\{duration}${},\39{}$\&{short} ${}{*}\\{palette})%
+\2\2{}$\6
+${}\{{}$\1\6
+\&{int} \|i;\7
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{16};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{InterpolateColor}(\\{target},\39\\{time},\39\\{duration},\39{\AND}%
+\\{palette}[\|i]);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{113}This routine uses \PB{\\{InterpolateColor}} to interpolate four full
+palettes toward
+a given color.
+
+\Y\B\1\1\&{void} \\{InterpolateFullPalette}(\&{short} \\{target}${},\39{}$%
+\&{short} \\{time}${},\39{}$\&{short} \\{duration}${},\39{}$\&{short} ${}{*}%
+\\{palette})\2\2{}$\6
+${}\{{}$\1\6
+\&{int} \|i;\7
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{64};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{InterpolateColor}(\\{target},\39\\{time},\39\\{duration},\39{\AND}%
+\\{palette}[\|i]);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{114}This routine uses \PB{\\{InterpolateColor}} to interpolate a full
+palette
+toward a given palette.
+
+\Y\B\1\1\&{void} \\{Interpolate2Palettes}(\&{short} ${}{*}\\{target},\39{}$%
+\&{short} \\{time}${},\39{}$\&{short} \\{duration}${},\39{}$\&{short} ${}{*}%
+\\{palette})\2\2{}$\6
+${}\{{}$\1\6
+\&{int} \|i;\7
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{16};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{InterpolateColor}(\\{target}[\|i],\39\\{time},\39\\{duration},\39{\AND}%
+\\{palette}[\|i]);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{115}This routine uses \PB{\\{InterpolateColor}} to interpolate four full
+palettes toward
+a given set of palettes.
+
+\Y\B\1\1\&{void} \\{Interpolate2FullPalettes}(\&{short} ${}{*}\\{target},\39{}$%
+\&{short} \\{time}${},\39{}$\&{short} \\{duration}${},\39{}$\&{short} ${}{*}%
+\\{palette})\2\2{}$\6
+${}\{{}$\1\6
+\&{int} \|i;\7
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\T{64};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+${}\\{InterpolateColor}(\\{target}[\|i],\39\\{time},\39\\{duration},\39{\AND}%
+\\{palette}[\|i]);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{116}This routine fades the screen from black to the given palette set in %
+\PB{\\{time}}
+frames.
+
+\Y\B\1\1\&{void} \\{FadeIn}(\&{short} ${}{*}\\{palette},\39{}$\&{short} %
+\\{time})\2\2\6
+${}\{{}$\1\6
+\&{int} \|i${},\39\|j;{}$\6
+\&{short} \\{workpal}[\T{64}];\7
+\&{for} ${}(\|i\K\T{1};{}$ ${}\|i\Z\\{time};{}$ ${}\|i\PP){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{64};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{workpal}[\|j]\K\\{palette}[\|j];{}$\6
+\4${}\}{}$\2\6
+${}\\{InterpolateFullPalette}(\T{0},\39\|i,\39\\{time},\39\\{workpal});{}$\6
+\\{SendPalettes}(\\{workpal});\6
+\\{WaitTOF}(\,);\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{117}This routine fades the screen from the given palette set to black in %
+\PB{\\{time}}
+frames.
+
+\Y\B\1\1\&{void} \\{FadeOut}(\&{short} ${}{*}\\{palette},\39{}$\&{short} %
+\\{time})\2\2\6
+${}\{{}$\1\6
+\&{int} \|i${},\39\|j;{}$\6
+\&{short} \\{workpal}[\T{64}];\7
+\&{for} ${}(\|i\K\\{time}-\T{1};{}$ ${}\|i\G\T{0};{}$ ${}\|i\MM){}$\5
+${}\{{}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{64};{}$ ${}\|j\PP){}$\5
+${}\{{}$\1\6
+${}\\{workpal}[\|j]\K\\{palette}[\|j];{}$\6
+\4${}\}{}$\2\6
+${}\\{InterpolateFullPalette}(\T{0},\39\|i,\39\\{time},\39{\AND}%
+\\{workpal});{}$\6
+\\{SendPalettes}(\\{workpal});\6
+\\{WaitTOF}(\,);\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{118}\B\X4:Function prototypes\X${}\mathrel+\E{}$\6
+\&{void} \\{InterpolateColor}(\&{short} \\{target}${},\39{}$\&{short} %
+\\{time}${},\39{}$\&{short} \\{duration}${},\39{}$\&{short} ${}{*}%
+\\{color}){}$;\7
+\&{void} \\{InterpolatePalette}(\&{short} \\{target}${},\39{}$\&{short} %
+\\{time}${},\39{}$\&{short} \\{duration}${},\39{}$\&{short} ${}{*}%
+\\{palette}){}$;\7
+\&{void} \\{InterpolateFullPalette}(\&{short} \\{target}${},\39{}$\&{short} %
+\\{time}${},\39{}$\&{short} \\{duration}${},\39{}$\&{short} ${}{*}%
+\\{palette}){}$;\7
+\&{void} \\{Interpolate2Palettes}(\&{short} ${}{*}\\{target},\39{}$\&{short} %
+\\{time}${},\39{}$\&{short} \\{duration}${},\39{}$\&{short} ${}{*}%
+\\{palette}){}$;\7
+\&{void} \\{Interpolate2FullPalettes}(\&{short} ${}{*}\\{target},\39{}$%
+\&{short} \\{time}${},\39{}$\&{short} \\{duration}${},\39{}$\&{short} ${}{*}%
+\\{palette}){}$;\7
+\&{void} \\{FadeIn}(\&{short} ${}{*}\\{palette},\39{}$\&{short} \\{time});\7
+\&{void} \\{FadeOut}(\&{short} ${}{*}\\{palette},\39{}$\&{short} \\{time});\7
+$\I{}$\par
+\fi
+
+\N{1}{119}Data Decompression.  This does a decompression based on an algorithm
+developed by Mark Cerny and modified by Scott Chandler.  Compression is done by
+lz.exe.  The expansion is described by:
+
+$1+$ the next byte
+
+$00+ 1$ bit $(=0 => 2$ byte run, $=1 => 3$ byte run$)$
+
+$01+ 3$ bits high order offset$+1$ byte low order offset$+11+1$ byte count
+
+$01+ 3$ bits high order offset$+1$byte low order offset$+2$ bits $(count-3)$
+
+$01000+$zero byte $+ 11 +$ zero byte$ =>$ end
+
+$01000+$zero byte $+ 11 +$ byte $= 1 => 4k$ break, eat and emit nothing
+
+\Y\B\1\1\&{int} \\{ExpandLZ}(\&{unsigned} \&{char} ${}{*}\\{in},\39{}$%
+\&{unsigned} \&{char} ${}{*}\\{out})\2\2{}$\6
+${}\{{}$\1\6
+\&{unsigned} \&{char} ${}{*}\\{bytes};{}$\6
+\&{unsigned} \&{char} ${}{*}\\{temp};{}$\6
+\&{unsigned} \&{long} \\{shifter};\6
+\&{int} \\{offset};\6
+\&{int} \\{count};\6
+\&{int} \\{shift\_count}${}\K\T{0};{}$\6
+\&{int} \\{done}${}\K\T{0};{}$\7
+\X127:Find the byte stream and the bit stream\X\6
+\X128:Preload the bit stream shifter\X\6
+\&{while} ${}(\R\\{done}){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\T{\^80000000}\AND\\{shifter}){}$\5
+${}\{{}$\1\6
+\X122:Shift the bit stream one place\X\6
+\X125:Send out the next byte\X\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+\X122:Shift the bit stream one place\X\6
+\&{if} ${}(\T{\^80000000}\AND\\{shifter}){}$\1\5
+\X121:Repeat many bytes\X\2\6
+\&{else}\1\5
+\X120:Repeat two or three bytes\X\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{120}\B\X120:Repeat two or three bytes\X${}\E{}$\6
+${}\{{}$\1\6
+\X122:Shift the bit stream one place\X\6
+${}\\{temp}\K\\{out}-{*}\\{bytes}\PP;{}$\6
+\&{if} ${}(\T{\^80000000}\AND\\{shifter}){}$\5
+${}\{{}$\1\6
+\X126:Send out the byte at \PB{${*}\\{temp}$}\X\6
+\4${}\}{}$\2\6
+\X126:Send out the byte at \PB{${*}\\{temp}$}\X\6
+\X126:Send out the byte at \PB{${*}\\{temp}$}\X\6
+\X122:Shift the bit stream one place\X\6
+\4${}\}{}$\2\par
+\U119.\fi
+
+\M{121}\B\X121:Repeat many bytes\X${}\E{}$\6
+${}\{{}$\1\6
+\X122:Shift the bit stream one place\X\6
+${}\\{offset}\K(\\{shifter}\AND\T{\^e0000000})\GG\T{21};{}$\6
+\X124:Shift the bit stream three places\X\6
+${}\\{offset}\MRL{+{\K}}{*}\\{bytes}\PP;{}$\6
+\&{switch} ${}(\\{shifter}\AND\T{\^c0000000}){}$\5
+${}\{{}$\1\6
+\4\&{case} \T{\^00000000}:\5
+${}\\{count}\K\T{3};{}$\6
+\&{break};\6
+\4\&{case} \T{\^40000000}:\5
+${}\\{count}\K\T{4};{}$\6
+\&{break};\6
+\4\&{case} \T{\^80000000}:\5
+${}\\{count}\K\T{5};{}$\6
+\&{break};\6
+\4\&{case} \T{\^c0000000}:\5
+${}\\{count}\K{*}\\{bytes}\PP;{}$\6
+\&{if} ${}((\\{count}\E\T{0})\W(\\{offset}\E\T{0})){}$\1\5
+${}\\{done}\K\T{1};{}$\2\6
+\&{if} ${}((\\{count}\E\T{1})\W(\\{offset}\E\T{0})){}$\1\5
+${}\\{count}\K\T{0};{}$\2\6
+\&{break};\6
+\4${}\}{}$\2\6
+\X123:Shift the bit stream two places\X\6
+${}\\{temp}\K\\{out}-\\{offset};{}$\6
+\&{while} ${}(\\{count}\MM){}$\1\5
+\X126:Send out the byte at \PB{${*}\\{temp}$}\X\2\6
+\4${}\}{}$\2\par
+\U119.\fi
+
+\M{122}\B\X122:Shift the bit stream one place\X${}\E{}$\6
+$\\{shifter}\MRL{{\LL}{\K}}\T{1};{}$\6
+${}\\{shift\_count}\PP;{}$\6
+\&{if} ${}(\\{shift\_count}\E\T{8}){}$\5
+${}\{{}$\1\6
+${}\\{shifter}\MRL{{\OR}{\K}}{*}\\{in}\PP;{}$\6
+${}\\{shift\_count}\K\T{0};{}$\6
+\4${}\}{}$\2\par
+\Us119, 120, 121, 123\ETs124.\fi
+
+\M{123}\B\X123:Shift the bit stream two places\X${}\E{}$\6
+\X122:Shift the bit stream one place\X\6
+\X122:Shift the bit stream one place\X\par
+\U121.\fi
+
+\M{124}\B\X124:Shift the bit stream three places\X${}\E{}$\6
+\X122:Shift the bit stream one place\X\6
+\X122:Shift the bit stream one place\X\6
+\X122:Shift the bit stream one place\X\par
+\U121.\fi
+
+\M{125}\B\X125:Send out the next byte\X${}\E{}$\6
+${*}\\{out}\PP\K{*}\\{bytes}\PP{}$;\par
+\U119.\fi
+
+\M{126}\B\X126:Send out the byte at \PB{${*}\\{temp}$}\X${}\E{}$\6
+${*}\\{out}\PP\K{*}\\{temp}\PP{}$;\par
+\Us120\ET121.\fi
+
+\M{127}\B\X127:Find the byte stream and the bit stream\X${}\E{}$\6
+$\\{bytes}\K\\{in}+{*}{}$(\&{unsigned} \&{short} ${}{*})\,\\{in};{}$\6
+${}\\{bytes}\MRL{+{\K}}\T{2};{}$\6
+${}\\{in}\MRL{+{\K}}\T{2}{}$;\par
+\U119.\fi
+
+\M{128}\B\X128:Preload the bit stream shifter\X${}\E{}$\6
+$\\{shifter}\K{*}{}$(\&{unsigned} \&{long} ${}{*})\,\\{in};{}$\6
+${}\\{in}\MRL{+{\K}}\T{4};$ $\I{}$\par
+\U119.\fi
+
+\N{1}{129}Co\"ordinate System Transformations.
+
+To produce a VDP address from a square coordinate, we apply several
+transforms.  Before we begin, let me define a few things.  Square coordinates
+originate in the lower left, with $j$ increasing horizontally to the right,
+and $i$ increasing diagonally to the upper right.  Cell coordinates also
+originate in the lower left, with $x$ increasing to the right, but $y$
+increases straight up, rather than diagonally.  The mapping between them is
+defined by:$$x=4\cdot j + i$$ $$y = 2\cdot i + z$$The display
+screen
+has its vertical coordinate flipped.  The mapping from cell coordinates to
+screen
+coordinates is:$$\alpha=x$$ $$\beta=y_{max}-y$$From screen coordinates to
+VDP coordinates is:$$\theta=\alpha\bmod 64$$ $$\phi=\beta\bmod 32$$The final
+conversion is to a VDP address, as follows:$$addr=ScreenBase+128\phi+2\theta$$
+Substitution doesn't really gain anything in terms of efficiency, so we
+calculate as outlined above.  The values $\theta$ and $\phi$ are useful, while
+we are drawing squares, to determine whether we have crossed the screen wrap
+point in any direction as we draw these extended objects.
+
+The conversion to screen pixel coordinates simply involves multiplying the
+screen coordinates by eight. $$\alpha_p=8\cdot\alpha$$ $$\beta_p=8\cdot\beta$$
+To go on to an actual sprite position,  $$h=\alpha_p-S_x+128$$
+$$v=\beta_p-S_y+128+7$$
+Where $S_x$ and $S_y$ are the screen fine scroll settings.
+
+Finally, adjust for the sprite's registration requirements.
+
+Inverting the mapping, in order to recover a square coordinate from a cell
+coordinate, is complicated by the presence of the \PB{\|z} value for squares.
+Ignoring that, we can map back with reasonable ease.
+With \PB{\|z} included, the
+equations are not completely solvable.  We get $$j=(2x-y+z)/8$$
+$$i=(y-z)/2$$but
+we need to check the map for all `possible' \PB{\|z} to see what is really
+there.
+
+\fi
+
+\N{1}{130}Gameplay---Paths.  This is the core of the game play in \TT.  A path
+consists of an array of squares, each of which can be one of a number of types,
+and each also has an elevation.  The characters move about in a quantized
+fashion on this grid.
+
+\fi
+
+\M{131}This procedure loads the VDP, expands the compressed level data,
+prepares the
+enemies that are present in this level, fills the display screen, and otherwise
+gets things ready to run.
+
+\Y\B\4\D$\.{DATA\_COMPRESSED}$ \5
+\T{0}\par
+\Y\B\1\1\&{void} \\{InitPath}(\,)\2\2\6
+${}\{{}$\1\6
+\&{int} \|i${},\39\|j;{}$\6
+\&{unsigned} \&{char} ${}{*}\\{buffer};{}$\6
+\&{unsigned} \&{short} ${}{*}\\{bufferA};{}$\6
+\&{unsigned} \&{short} ${}{*}\\{bufferB};{}$\6
+\8\#\&{if} \.{DATA\_COMPRESSED}\7
+${}\\{buffer}\K{}$(\&{unsigned} \&{char} ${}{*})\,\\{AllocMem}(\T{4096});{}$\6
+${}\\{ExpandLZ}(\\{currentPath}\MG\\{artSet}\MG\\{data},\39\\{buffer});{}$\6
+${}\\{SendBlock32}(\\{buffer},\39\.{FG\_CELLS},\39\T{4096});{}$\6
+\\{WaitTOF}(\,);\6
+\\{FreeMem}(\\{buffer});\6
+\8\#\&{else}\6
+${}\\{SendBlock32}(\\{currentPath}\MG\\{artSet}\MG\\{data},\39\.{FG\_CELLS},\39%
+\T{4096});{}$\6
+\\{WaitTOF}(\,);\6
+\8\#\&{endif}\6
+${}\\{SendBlock32}(\\{digitData},\39\T{\^f000},\39\T{4096});{}$\6
+\X133:Unpack and prepare the path map\X\6
+\X132:Place the player\X\6
+${}\\{SendBlock32}(\\{milescells},\39\T{768}*\T{32},\39\T{4096});{}$\6
+\X136:Fill up the screen\X\6
+${}\\{FadeIn}(\\{currentPath}\MG\\{artSet}\MG\\{palette},\39\T{32});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{132}\B\X132:Place the player\X${}\E{}$\6
+$\\{currentPlayer}\MG\\{xPosition}\K\\{currentPath}\MG\\{xStart};{}$\6
+${}\\{currentPlayer}\MG\\{yPosition}\K\\{currentPath}\MG\\{yStart};{}$\6
+${}\\{currentPlayer}\MG\\{chBase}\K\T{\^a300};{}$\6
+${}\\{currentPlayer}\MG\\{Frame}\K\\{milesshape};{}$\6
+${}\\{currentPlayer}\MG\\{anim\_next}\K\\{MilesStandEast};{}$\6
+${}\\{currentPlayer}\MG\\{xOffset}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{yOffset}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{counter}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{Frame}\K\\{milesshape};{}$\6
+${}\\{currentPlayer}\MG\\{anim\_time}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{behavior}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{type}\K\T{1}{}$;\par
+\U131.\fi
+
+\M{133}\B\X133:Unpack and prepare the path map\X${}\E{}$\6
+$\\{pathMap}\K\\{currentPath}\MG\\{map};{}$\6
+${}\\{screenScrollY}\K\T{800};{}$\6
+${}\\{screenScrollX}\K\T{0}{}$;\par
+\U131.\fi
+
+\M{134}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{PathPtr} \\{currentPath};\6
+\&{SquarePtr} \\{pathMap};\6
+\&{int} \\{mapWidth};\6
+\&{short} \\{rowOffsets}[\T{64}];\par
+\fi
+
+\M{135}\B\X14:Typedef declarations\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{square\_t} ${}\{{}$\1\6
+\&{short} \\{type};\6
+\&{short} \\{elevation};\2\6
+${}\}{}$ \&{Square}${},{}$ ${}{*}\&{SquarePtr}{}$;\par
+\fi
+
+\M{136}\B\X136:Fill up the screen\X${}\E{}$\6
+\X137:Allocate and clear some temporary screen buffers\X\6
+\X138:Fill up the buffers with squares\X\6
+\X145:Request transfer of screen data\X\6
+\\{WaitTOF}(\,);\6
+\X146:Free the temporary screen buffers\X\par
+\U131.\fi
+
+\M{137}\B\X137:Allocate and clear some temporary screen buffers\X${}\E{}$\6
+$\\{bufferA}\K{}$(\&{unsigned} \&{short} ${}{*})\,\\{AllocMem}(\T{2}*\T{32}*%
+\T{64});{}$\6
+${}\\{memset}(\\{bufferA},\39\T{0},\39\T{2}*\T{32}*\T{64});{}$\6
+${}\\{bufferB}\K{}$(\&{unsigned} \&{short} ${}{*})\,\\{AllocMem}(\T{2}*\T{32}*%
+\T{64});{}$\6
+${}\\{memset}(\\{bufferB},\39\T{0},\39\T{2}*\T{32}*\T{64}){}$;\par
+\U136.\fi
+
+\M{138}\B\X138:Fill up the buffers with squares\X${}\E{}$\6
+$\\{mapWidth}\K\\{currentPath}\MG\\{xSize};{}$\6
+${}\|j\K\T{0};{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{currentPath}\MG\\{ySize};{}$ ${}\|i\PP){}$%
+\5
+${}\{{}$\1\6
+${}\\{rowOffsets}[\|i]\K\|j;{}$\6
+${}\|j\MRL{+{\K}}\\{mapWidth};{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|i\K\T{13};{}$ ${}\|i\G\T{0};{}$ ${}\|i\MM){}$\1\6
+\&{for} ${}(\|j\K\T{0};{}$ ${}\|j<\T{11};{}$ ${}\|j\PP{}$)\1\6
+\&{if} ${}(\\{pathMap}[\\{SquareLoc}(\|j,\39\|i)].\\{type}){}$\1\5
+\X139:Draw a square at square coordinate $[j, i]$\X\2\2\2\par
+\U136.\fi
+
+\M{139}This section draws a square into the pseudo-vdp.  For details of the
+coordinate transformations, see {\bf Co\"ordinate system
+transformations}.
+
+\Y\B\4\D$\\{yMax}$ \5
+$(\T{4}*\T{32}-\T{1}{}$)\par
+\B\4\D$\\{SquareLoc}(\|x,\|y)$ \5
+$(\\{rowOffsets}[\|y]+\|x{}$)\par
+\Y\B\4\X139:Draw a square at square coordinate $[j, i]$\X${}\E{}$\6
+${}\{{}$\1\6
+\&{unsigned} \&{short} ${}{*}\\{ba},\39{*}\\{bb};{}$\6
+\&{int} \|y${},\39\\{alpha},\39\\{beta},\39\\{theta},\39\\{phi},\39%
+\\{offset};{}$\7
+${}\|y\K(\|i\LL\T{1});{}$\6
+${}\\{alpha}\K(\|j\LL\T{2})+\|i;{}$\6
+${}\|y\MRL{+{\K}}\\{pathMap}[\\{SquareLoc}(\|j,\39\|i)].\\{elevation};{}$\6
+${}\\{beta}\K\\{yMax}-\|y;{}$\6
+${}\\{theta}\K\\{alpha}\MOD\T{64};{}$\6
+${}\\{phi}\K\\{beta}\MOD\T{32};{}$\6
+${}\\{offset}\K\T{64}*\\{phi}+\\{theta}{}$;\C{ half because this is a word
+address }\6
+${}\\{offset}\MRL{+{\K}}\T{64}{}$;\C{ to get the face of the square }\6
+${}\\{ba}\K\\{bufferA}+\\{offset};{}$\6
+${}\\{bb}\K\\{bufferB}+\\{offset};{}$\6
+\&{switch} (\\{theta})\5
+${}\{{}$\1\6
+\4\&{case} \T{63}:\5
+\X141:Draw a block with the screen wrap at cell 1\X\6
+\&{break};\6
+\4\&{case} \T{62}:\5
+\X142:Draw a block with the screen wrap at cell 2\X\6
+\&{break};\6
+\4\&{case} \T{61}:\5
+\X143:Draw a block with the screen wrap at cell 3\X\6
+\&{break};\6
+\4\&{case} \T{60}:\5
+\X144:Draw a block with the screen wrap at cell 4\X\6
+\&{break};\6
+\4\&{default}:\5
+\X140:Draw a block normally\X\6
+\&{break};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U138.\fi
+
+\M{140}\B\X140:Draw a block normally\X${}\E{}$\6
+$\\{bb}[\T{0}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{1}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{2}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{3}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{4}]\K\T{\^0008};{}$\6
+${}\\{ba}\MRL{-{\K}}\T{64};{}$\6
+${}\\{bb}\MRL{-{\K}}\T{64};{}$\6
+${}\\{ba}[\T{0}]\K\T{\^0004};{}$\6
+${}\\{ba}[\T{1}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{2}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{3}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{4}]\K\T{\^0006};{}$\6
+${}\\{ba}\MRL{-{\K}}\T{64};{}$\6
+${}\\{bb}\MRL{-{\K}}\T{64};{}$\6
+${}\\{ba}[\T{0}]\K\T{\^0001};{}$\6
+${}\\{ba}[\T{1}]\K\T{\^0002};{}$\6
+${}\\{ba}[\T{2}]\K\T{\^0002};{}$\6
+${}\\{bb}[\T{3}]\K\T{\^0002};{}$\6
+${}\\{bb}[\T{4}]\K\T{\^0003}{}$;\par
+\U139.\fi
+
+\M{141}\B\X141:Draw a block with the screen wrap at cell 1\X${}\E{}$\6
+$\\{bb}[\T{0}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{1}-\T{64}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{2}-\T{64}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{3}-\T{64}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{4}-\T{64}]\K\T{\^0008};{}$\6
+${}\\{ba}\MRL{-{\K}}\T{64};{}$\6
+${}\\{bb}\MRL{-{\K}}\T{64};{}$\6
+${}\\{ba}[\T{0}]\K\T{\^0004};{}$\6
+${}\\{ba}[\T{1}-\T{64}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{2}-\T{64}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{3}-\T{64}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{4}-\T{64}]\K\T{\^0006};{}$\6
+${}\\{ba}\MRL{-{\K}}\T{64};{}$\6
+${}\\{bb}\MRL{-{\K}}\T{64};{}$\6
+${}\\{ba}[\T{0}]\K\T{\^0001};{}$\6
+${}\\{ba}[\T{1}-\T{64}]\K\T{\^0002};{}$\6
+${}\\{ba}[\T{2}-\T{64}]\K\T{\^0002};{}$\6
+${}\\{ba}[\T{3}-\T{64}]\K\T{\^0002};{}$\6
+${}\\{bb}[\T{4}-\T{64}]\K\T{\^0003}{}$;\par
+\U139.\fi
+
+\M{142}\B\X142:Draw a block with the screen wrap at cell 2\X${}\E{}$\6
+$\\{bb}[\T{0}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{1}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{2}-\T{64}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{3}-\T{64}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{4}-\T{64}]\K\T{\^0008};{}$\6
+${}\\{ba}\MRL{-{\K}}\T{64};{}$\6
+${}\\{bb}\MRL{-{\K}}\T{64};{}$\6
+${}\\{ba}[\T{0}]\K\T{\^0004};{}$\6
+${}\\{ba}[\T{1}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{2}-\T{64}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{3}-\T{64}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{4}-\T{64}]\K\T{\^0006};{}$\6
+${}\\{ba}\MRL{-{\K}}\T{64};{}$\6
+${}\\{bb}\MRL{-{\K}}\T{64};{}$\6
+${}\\{ba}[\T{0}]\K\T{\^0001};{}$\6
+${}\\{ba}[\T{1}]\K\T{\^0002};{}$\6
+${}\\{ba}[\T{2}-\T{64}]\K\T{\^0002};{}$\6
+${}\\{ba}[\T{3}-\T{64}]\K\T{\^0002};{}$\6
+${}\\{bb}[\T{4}-\T{64}]\K\T{\^0003}{}$;\par
+\U139.\fi
+
+\M{143}\B\X143:Draw a block with the screen wrap at cell 3\X${}\E{}$\6
+$\\{bb}[\T{0}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{1}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{2}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{3}-\T{64}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{4}-\T{64}]\K\T{\^0008};{}$\6
+${}\\{ba}\MRL{-{\K}}\T{64};{}$\6
+${}\\{bb}\MRL{-{\K}}\T{64};{}$\6
+${}\\{ba}[\T{0}]\K\T{\^0004};{}$\6
+${}\\{ba}[\T{1}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{2}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{3}-\T{64}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{4}-\T{64}]\K\T{\^0006};{}$\6
+${}\\{ba}\MRL{-{\K}}\T{64};{}$\6
+${}\\{bb}\MRL{-{\K}}\T{64};{}$\6
+${}\\{ba}[\T{0}]\K\T{\^0001};{}$\6
+${}\\{ba}[\T{1}]\K\T{\^0002};{}$\6
+${}\\{ba}[\T{2}]\K\T{\^0002};{}$\6
+${}\\{ba}[\T{3}-\T{64}]\K\T{\^0002};{}$\6
+${}\\{bb}[\T{4}-\T{64}]\K\T{\^0003}{}$;\par
+\U139.\fi
+
+\M{144}\B\X144:Draw a block with the screen wrap at cell 4\X${}\E{}$\6
+$\\{bb}[\T{0}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{1}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{2}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{3}]\K\T{\^0007};{}$\6
+${}\\{bb}[\T{4}-\T{64}]\K\T{\^0009};{}$\6
+${}\\{ba}\MRL{-{\K}}\T{64};{}$\6
+${}\\{bb}\MRL{-{\K}}\T{64};{}$\6
+${}\\{ba}[\T{0}]\K\T{\^0004};{}$\6
+${}\\{ba}[\T{1}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{2}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{3}]\K\T{\^0005};{}$\6
+${}\\{bb}[\T{4}-\T{64}]\K\T{\^0006};{}$\6
+${}\\{ba}\MRL{-{\K}}\T{64};{}$\6
+${}\\{bb}\MRL{-{\K}}\T{64};{}$\6
+${}\\{ba}[\T{0}]\K\T{\^0001};{}$\6
+${}\\{ba}[\T{1}]\K\T{\^0002};{}$\6
+${}\\{ba}[\T{2}]\K\T{\^0002};{}$\6
+${}\\{ba}[\T{3}]\K\T{\^0002};{}$\6
+${}\\{bb}[\T{4}-\T{64}]\K\T{\^0003}{}$;\par
+\U139.\fi
+
+\M{145}\B\X145:Request transfer of screen data\X${}\E{}$\6
+$\\{SendBlock32}(\\{bufferA},\39\.{FG},\39\T{2}*\T{32}*\T{64});{}$\6
+${}\\{SendBlock32}(\\{bufferB},\39\.{BG},\39\T{2}*\T{32}*\T{64}){}$;\par
+\U136.\fi
+
+\M{146}\B\X146:Free the temporary screen buffers\X${}\E{}$\6
+\\{FreeMem}(\\{bufferA});\6
+\\{FreeMem}(\\{bufferB});\par
+\U136.\fi
+
+\M{147}This procedure is the core of the path gameplay.
+
+\Y\B\1\1\&{void} \\{RunPath}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{sprite}\K\T{0};{}$\6
+\X148:Update the player\X\6
+\X150:Update enemies\X\6
+\X151:Update screen\X\6
+${}\\{ReadControllers}({\AND}\\{bStick1});{}$\6
+\X216:Terminate the sprite list\X\6
+\\{WaitTOF}(\,);\6
+\4${}\}{}$\2\par
+\fi
+
+\M{148}\B\X148:Update the player\X${}\E{}$\6
+\X177:Move the player\X\6
+\X149:Draw the player\X\par
+\U147.\fi
+
+\M{149}\B\X149:Draw the player\X${}\E{}$\6
+\\{AnimateCreature}(\\{currentPlayer});\6
+\\{DrawCreatures}(\\{currentPlayer});\6
+\\{SendSpriteControl}(\\{spriteAttributes});\par
+\U148.\fi
+
+\M{150}\B\X150:Update enemies\X${}\E{}$\par
+\U147.\fi
+
+\M{151}\B\X151:Update screen\X${}\E{}$\6
+$\\{SendScrolls}(\\{screenScrollY},\39\\{screenScrollY},\39{-}%
+\\{screenScrollX},\39{-}\\{screenScrollX});{}$\6
+${}\{{}$\1\6
+\&{short} \\{oldX}${}\K\\{screenScrollX};{}$\6
+\&{short} \\{oldY}${}\K\\{screenScrollY};{}$\7
+\X152:Do screen fine scroll as necessary\X\6
+\X158:Do screen coarse scroll as necessary\X\6
+\4${}\}{}$\2\par
+\U147.\fi
+
+\M{152}\B\X152:Do screen fine scroll as necessary\X${}\E{}$\6
+\X153:Check for screen normal scroll\X\6
+\X154:Check for screen quick scroll\X\6
+\X155:Limit screen scrolling\X\par
+\U151.\fi
+
+\M{153}If the player is out of position, fine scroll the screen to bring him
+back.
+
+\Y\B\4\X153:Check for screen normal scroll\X${}\E{}$\6
+\&{if} ${}(\\{playerY}>\T{\^ff}){}$\1\5
+${}\\{screenScrollY}\PP;{}$\2\6
+\&{if} ${}(\\{playerY}<\T{\^ff}){}$\1\5
+${}\\{screenScrollY}\MM;{}$\2\6
+\&{if} ${}(\\{playerX}>\T{\^101}){}$\1\5
+${}\\{screenScrollX}\PP;{}$\2\6
+\&{if} ${}(\\{playerX}>\T{\^100}){}$\1\5
+${}\\{screenScrollX}\PP;{}$\2\6
+\&{if} ${}(\\{playerX}<\T{\^0ff}){}$\1\5
+${}\\{screenScrollX}\MM;{}$\2\6
+\&{if} ${}(\\{playerX}<\T{\^100}){}$\1\5
+${}\\{screenScrollX}\MM{}$;\2\par
+\U152.\fi
+
+\M{154}If the player is more than 24 pixels out of position vertically, or 40
+pixels
+horizontally, do a double-speed scroll.
+
+\Y\B\4\X154:Check for screen quick scroll\X${}\E{}$\6
+\&{if} ${}(\\{playerY}>\T{\^117}){}$\1\5
+${}\\{screenScrollY}\PP;{}$\2\6
+\&{if} ${}(\\{playerY}<\T{\^e7}){}$\1\5
+${}\\{screenScrollY}\MM;{}$\2\6
+\&{if} ${}(\\{playerX}>\T{\^128}){}$\1\5
+${}\\{screenScrollX}\MRL{+{\K}}\T{2};{}$\2\6
+\&{if} ${}(\\{playerX}<\T{\^0d8}){}$\1\5
+${}\\{screenScrollX}\MRL{-{\K}}\T{2}{}$;\2\par
+\U152.\fi
+
+\M{155}As the screen reaches the edges of the world, we need to be sure that we
+don't fall off.
+
+\Y\B\4\X155:Limit screen scrolling\X${}\E{}$\6
+\&{if} ${}(\\{screenScrollX}<\T{0}){}$\1\5
+${}\\{screenScrollX}\K\T{0};{}$\2\6
+\&{if} ${}(\\{screenScrollX}>\T{7}*\T{40}*\T{8}){}$\1\5
+${}\\{screenScrollX}\K\T{7}*\T{40}*\T{8};{}$\2\6
+\&{if} ${}(\\{screenScrollY}<\T{0}){}$\1\5
+${}\\{screenScrollY}\K\T{0};{}$\2\6
+\&{if} ${}(\\{screenScrollY}>(\\{yMax}*\T{8}-\T{216})){}$\1\5
+${}\\{screenScrollY}\K(\\{yMax}*\T{8}-\T{216}){}$;\2\par
+\U152.\fi
+
+\M{156}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{SpriteDef} \\{spriteAttributes}[\T{80}];\6
+\&{short} \\{sprite};\6
+\&{short} \\{screenScrollX};\6
+\&{short} \\{screenScrollY};\6
+\&{short} \\{playerX};\6
+\&{short} \\{playerY};\par
+\fi
+
+\M{157}This structure complies with the Genesis hardware sprite control block.
+
+\Y\B\4\X14:Typedef declarations\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} ${}\{{}$\1\6
+\&{unsigned} \&{short} \\{vp};\6
+\&{unsigned} \&{char} \\{size};\6
+\&{unsigned} \&{char} \\{link};\6
+\&{unsigned} \&{short} \\{cell};\6
+\&{unsigned} \&{short} \\{hp};\2\6
+${}\}{}$ \&{SpriteDef}${},{}$ ${}{*}\&{SpriteDefPtr}{}$;\par
+\fi
+
+\M{158}As the fine scroll crosses certain boundaries, it becomes necessary to
+add
+cells along the edges of the display.  This section determines when that is
+needed and performs the update.
+
+\Y\B\4\X158:Do screen coarse scroll as necessary\X${}\E{}$\6
+${}\{{}$\1\6
+\&{short} \\{target};\7
+\X159:Add a column on the right, if needed\X\6
+\X160:Add a column on the left, if needed\X\6
+\X161:Add a row on the top, if needed\X\6
+\X162:Add a row on the bottom, if needed\X\6
+\4${}\}{}$\2\par
+\U151.\fi
+
+\M{159}\B\X159:Add a column on the right, if needed\X${}\E{}$\6
+\&{if} ${}(((\\{oldX}\XOR\\{screenScrollX})\AND\T{\^8})\W(\\{screenScrollX}>%
+\\{oldX})){}$\1\5
+\X164:Add a new column on the right\X\2\par
+\U158.\fi
+
+\M{160}\B\X160:Add a column on the left, if needed\X${}\E{}$\6
+\&{if} ${}(((\\{oldX}\XOR\\{screenScrollX})\AND\T{\^8})\W(\\{screenScrollX}<%
+\\{oldX})){}$\1\5
+\X165:Add a new column on the left\X\2\par
+\U158.\fi
+
+\M{161}\B\X161:Add a row on the top, if needed\X${}\E{}$\6
+\&{if} ${}(((\\{oldY}\XOR\\{screenScrollY})\AND\T{\^8})\W(\\{screenScrollY}<%
+\\{oldY})){}$\1\5
+\X166:Add a new row on the top\X\2\par
+\U158.\fi
+
+\M{162}\B\X162:Add a row on the bottom, if needed\X${}\E{}$\6
+\&{if} ${}(((\\{oldY}\XOR\\{screenScrollY})\AND\T{\^8})\W(\\{screenScrollY}>%
+\\{oldY})){}$\1\5
+\X167:Add a new row on the bottom\X\2\par
+\U158.\fi
+
+\M{163}These buffers are used to construct new rows and columns for screen
+coarse
+scroll updates.  We need them both because we might have to do a vertical and
+horizontal update simultaneously.
+
+\Y\B\4\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{short} \\{lineUpdateBufferA}[\T{64}];\6
+\&{short} \\{colUpdateBufferA}[\T{32}];\6
+\&{short} \\{lineUpdateBufferB}[\T{64}];\6
+\&{short} \\{colUpdateBufferB}[\T{32}];\par
+\fi
+
+\M{164}\B\X164:Add a new column on the right\X${}\E{}$\6
+${}\{{}$\1\6
+\&{short} \\{column}${}\K\\{screenScrollX}+\T{320};{}$\7
+\\{BuildNewColumn}(\\{column});\6
+${}\\{target}\K(\\{column}\GG\T{2})\AND\T{126};{}$\6
+${}\\{SendColumn}({\AND}\\{colUpdateBufferA},\39\\{target}+\.{FG});{}$\6
+${}\\{SendColumn}({\AND}\\{colUpdateBufferB},\39\\{target}+\.{BG});{}$\6
+\4${}\}{}$\2\par
+\U159.\fi
+
+\M{165}\B\X165:Add a new column on the left\X${}\E{}$\6
+${}\{{}$\1\6
+\&{short} \\{column}${}\K\\{screenScrollX}-\T{8};{}$\7
+\\{BuildNewColumn}(\\{column});\6
+${}\\{target}\K(\\{column}\GG\T{2})\AND\T{126};{}$\6
+${}\\{SendColumn}({\AND}\\{colUpdateBufferA},\39\\{target}+\.{FG});{}$\6
+${}\\{SendColumn}({\AND}\\{colUpdateBufferB},\39\\{target}+\.{BG});{}$\6
+\4${}\}{}$\2\par
+\U160.\fi
+
+\M{166}\B\X166:Add a new row on the top\X${}\E{}$\6
+${}\{{}$\1\6
+\&{short} \\{column}${}\K\\{screenScrollX}-\T{8};{}$\6
+\&{short} \\{row}${}\K\\{screenScrollY};{}$\7
+${}\\{BuildNewRow}(\\{row},\39\\{column});{}$\6
+${}\\{target}\K(((\\{screenScrollY})\GG\T{3})*\T{128})\AND\T{4095};{}$\6
+${}\\{SendBlock32}({\AND}\\{lineUpdateBufferA},\39\\{target}+\.{FG},\39%
+\T{128});{}$\6
+${}\\{SendBlock32}({\AND}\\{lineUpdateBufferB},\39\\{target}+\.{BG},\39%
+\T{128});{}$\6
+\4${}\}{}$\2\par
+\U161.\fi
+
+\M{167}\B\X167:Add a new row on the bottom\X${}\E{}$\6
+${}\{{}$\1\6
+\&{short} \\{column}${}\K\\{screenScrollX}-\T{8};{}$\6
+\&{short} \\{row}${}\K\\{screenScrollY}+\T{232};{}$\7
+${}\\{BuildNewRow}(\\{row},\39\\{column});{}$\6
+${}\\{target}\K(((\\{screenScrollY}+\T{232})\GG\T{3})*\T{128})\AND\T{4095};{}$\6
+${}\\{SendBlock32}({\AND}\\{lineUpdateBufferA},\39\\{target}+\.{FG},\39%
+\T{128});{}$\6
+${}\\{SendBlock32}({\AND}\\{lineUpdateBufferB},\39\\{target}+\.{BG},\39%
+\T{128});{}$\6
+\4${}\}{}$\2\par
+\U162.\fi
+
+\M{168}These procedures construct a new row or column for dispatch to the VDP.
+
+\Y\B\&{void} \\{BuildNewColumn}(\&{short} \\{column}) \X170:Build the new
+column\X\6
+\&{void} \\{BuildNewRow}(\&{short} \\{row}${},\39{}$\&{short} \\{column}) %
+\X171:Build the new row\X\par
+\fi
+
+\M{169}\B\X4:Function prototypes\X${}\mathrel+\E{}$\6
+\&{void} \\{BuildNewRow}(\&{short} \\{row}${},\39{}$\&{short} \\{column});\6
+\&{void} \\{BuildNewColumn}(\&{short} \\{column});\par
+\fi
+
+\M{170}\B\X170:Build the new column\X${}\E{}$\6
+${}\{{}$\1\6
+\&{short} \|i${},\39\|j;{}$\6
+\&{short} \|a;\6
+\&{short} \|e;\C{ edge flag }\6
+\&{short} \|y${}\K\\{yMax}-((\\{screenScrollY}-\T{8})\GG\T{3});{}$\6
+\&{short} \|b${}\K\T{31}-(\|y\MOD\T{32});{}$\6
+\&{short} \|x${}\K\\{column}\GG\T{3};{}$\6
+\&{short} \|z;\6
+\&{short} \|k${},\39\|l;{}$\6
+\&{short} \\{ua}${},\39\\{ub};{}$\6
+\&{short} \\{ch};\6
+\&{SquarePtr} \\{currentSquare};\7
+\\{CellTestPtr}\\{test};\6
+\&{for} ${}(\|a\K\|b;{}$ ${}\|a<\T{32};{}$ ${}\|a\PP){}$\5
+${}\{{}$\1\6
+${}\\{ua}\K\T{0};{}$\6
+${}\\{ub}\K\T{0};{}$\6
+\X172:Draw a slice of square\X\6
+${}\\{colUpdateBufferA}[\|a]\K\\{ua};{}$\6
+${}\\{colUpdateBufferB}[\|a]\K\\{ub};{}$\6
+${}\|y\MM;{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|a\K\T{0};{}$ ${}\|a<\|b;{}$ ${}\|a\PP){}$\5
+${}\{{}$\1\6
+${}\\{ua}\K\T{0};{}$\6
+${}\\{ub}\K\T{0};{}$\6
+\X172:Draw a slice of square\X\6
+${}\\{colUpdateBufferA}[\|a]\K\\{ua};{}$\6
+${}\\{colUpdateBufferB}[\|a]\K\\{ub};{}$\6
+${}\|y\MM;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U168.\fi
+
+\M{171}\B\X171:Build the new row\X${}\E{}$\6
+${}\{{}$\1\6
+\&{short} \|i${},\39\|j,\39\|z,\39\|n;{}$\6
+\&{short} \|x${}\K\\{column}\GG\T{3};{}$\6
+\&{short} \|y${}\K\\{yMax}-(\\{row}\GG\T{3});{}$\6
+\&{short} \|a;\6
+\&{short} \|b${}\K\|x\MOD\T{64};{}$\6
+\&{short} \|k;\6
+\&{short} \\{ua}${},\39\\{ub};{}$\7
+\\{CellTestPtr}\\{test};\6
+\&{for} ${}(\|a\K\|b;{}$ ${}\|a<\T{64};{}$ ${}\|a\PP){}$\5
+${}\{{}$\1\6
+${}\\{ua}\K\T{0};{}$\6
+${}\\{ub}\K\T{0};{}$\6
+\X172:Draw a slice of square\X\6
+${}\\{lineUpdateBufferA}[\|a]\K\\{ua};{}$\6
+${}\\{lineUpdateBufferB}[\|a]\K\\{ub};{}$\6
+${}\|x\PP;{}$\6
+\4${}\}{}$\2\6
+\&{for} ${}(\|a\K\T{0};{}$ ${}\|a<\|b;{}$ ${}\|a\PP){}$\5
+${}\{{}$\1\6
+${}\\{ua}\K\T{0};{}$\6
+${}\\{ub}\K\T{0};{}$\6
+\X172:Draw a slice of square\X\6
+${}\\{lineUpdateBufferA}[\|a]\K\\{ua};{}$\6
+${}\\{lineUpdateBufferB}[\|a]\K\\{ub};{}$\6
+${}\|x\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\U168.\fi
+
+\M{172}\B\X172:Draw a slice of square\X${}\E{}$\6
+${}\{{}$\1\6
+\\{CellTestPtr}\\{test};\7
+\&{short} \\{ib}${}\K\|y\GG\T{3};{}$\6
+\&{short} \\{jb}${}\K(\|x\GG\T{2})-\\{ib};{}$\7
+${}\\{ib}\MRL{{\LL}{\K}}\T{2};{}$\6
+${}\\{test}\K\\{screenTranslate}[\|x\MOD\T{4}][\|y\MOD\T{8}];{}$\6
+\&{for} ${}(\|k\K\T{0};{}$ ${}\|k<\T{400};{}$ ${}\|k\PP){}$\5
+${}\{{}$\1\6
+\&{if} ${}(\\{test}[\|k].\|j+\\{jb}<\T{0}){}$\1\5
+\&{continue};\2\6
+\&{if} ${}(\\{test}[\|k].\|i+\\{ib}<\T{0}){}$\1\5
+\&{continue};\2\6
+\&{if} ${}(\R\\{pathMap}[\\{SquareLoc}(\\{test}[\|k].\|j+\\{jb},\39\\{test}[%
+\|k].\|i+\\{ib})].\\{type}){}$\1\5
+\&{continue};\2\6
+\&{if} ${}(\\{test}[\|k].\|z\E\\{pathMap}[\\{SquareLoc}(\\{test}[\|k].\|j+%
+\\{jb},\39\\{test}[\|k].\|i+\\{ib})].\\{elevation}){}$\5
+${}\{{}$\1\6
+\&{if} (\\{ua})\5
+${}\{{}$\1\6
+${}\\{ub}\K\\{l1cells}[\\{pathMap}[\\{SquareLoc}(\\{test}[\|k].\|j+\\{jb},\39%
+\\{test}[\|k].\|i+\\{ib})].\\{type}][\\{test}[\|k].\|n];{}$\6
+\&{if} (\\{ub})\1\5
+\&{break};\2\6
+\4${}\}{}$\2\6
+\&{else}\5
+${}\{{}$\1\6
+${}\\{ua}\K\\{l1cells}[\\{pathMap}[\\{SquareLoc}(\\{test}[\|k].\|j+\\{jb},\39%
+\\{test}[\|k].\|i+\\{ib})].\\{type}][\\{test}[\|k].\|n];{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\Us170\ET171.\fi
+
+\M{173}\B\X14:Typedef declarations\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} ${}\{{}$\1\6
+\&{char} \|j;\6
+\&{char} \|i;\6
+\&{char} \|z;\6
+\&{char} \|n;\2\6
+${}\}{}$ \&{CellTest}${},{}$ ${}{*}\&{CellTestPtr}{}$;\par
+\fi
+
+\M{174}This table is used to determine which cell of which pattern should be
+drawn
+at a given screen location
+
+\Y\B\4\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{CellTest} \\{screenTranslate}[\T{4}][\T{8}][\T{400}]${}\K\{\{\{\{\T{0},%
+\39{-}\T{3},\39\T{5},\39\T{3}+\T{0}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39%
+\T{6},\39\T{3}+\T{1}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39\T{7},\39\T{3}+%
+\T{2}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39\T{8},\39\T{3}+\T{3}*\T{5}+\T{1}%
+\},\39\{\T{0},\39{-}\T{3},\39\T{9},\39\T{3}+\T{4}*\T{5}+\T{1}\},\39\{\T{0},%
+\39{-}\T{3},\39\T{20},\39\T{3}+\T{5}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39%
+\T{21},\39\T{3}+\T{6}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39\T{12},\39\T{3}+%
+\T{7}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39\T{13},\39\T{3}+\T{8}*\T{5}+\T{1}%
+\},\39\{\T{0},\39{-}\T{3},\39\T{14},\39\T{3}+\T{9}*\T{5}+\T{1}\},\39\{\T{0},%
+\39{-}\T{3},\39\T{15},\39\T{3}+\T{10}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39%
+\T{16},\39\T{3}+\T{11}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39\T{17},\39\T{3}+%
+\T{12}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39\T{18},\39\T{3}+\T{13}*\T{5}+%
+\T{1}\},\39\{\T{0},\39{-}\T{3},\39\T{19},\39\T{3}+\T{14}*\T{5}+\T{1}\},\39\{%
+\T{0},\39{-}\T{3},\39\T{20},\39\T{3}+\T{15}*\T{5}+\T{1}\},\39\{\T{0},\39{-}%
+\T{2},\39\T{3},\39\T{2}+\T{0}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{4},\39%
+\T{2}+\T{1}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{5},\39\T{2}+\T{2}*\T{5}+%
+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{6},\39\T{2}+\T{3}*\T{5}+\T{1}\},\39\{%
+\T{0},\39{-}\T{2},\39\T{7},\39\T{2}+\T{4}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},%
+\39\T{8},\39\T{2}+\T{5}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{9},\39\T{2}+%
+\T{6}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{10},\39\T{2}+\T{7}*\T{5}+\T{1}%
+\},\39\{\T{0},\39{-}\T{2},\39\T{11},\39\T{2}+\T{8}*\T{5}+\T{1}\},\39\{\T{0},%
+\39{-}\T{2},\39\T{12},\39\T{2}+\T{9}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39%
+\T{13},\39\T{2}+\T{10}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{14},\39\T{2}+%
+\T{11}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{15},\39\T{2}+\T{12}*\T{5}+%
+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{16},\39\T{2}+\T{13}*\T{5}+\T{1}\},\39\{%
+\T{0},\39{-}\T{2},\39\T{17},\39\T{2}+\T{14}*\T{5}+\T{1}\},\39\{\T{0},\39{-}%
+\T{2},\39\T{18},\39\T{2}+\T{15}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{19},%
+\39\T{2}+\T{16}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{20},\39\T{2}+\T{17}*%
+\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{1},\39\T{1}+\T{0}*\T{5}+\T{1}\},\39%
+\{\T{0},\39{-}\T{1},\39\T{2},\39\T{1}+\T{1}*\T{5}+\T{1}\},\39\{\T{0},\39{-}%
+\T{1},\39\T{3},\39\T{1}+\T{2}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{4},\39%
+\T{1}+\T{3}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{5},\39\T{1}+\T{4}*\T{5}+%
+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{6},\39\T{1}+\T{5}*\T{5}+\T{1}\},\39\{%
+\T{0},\39{-}\T{1},\39\T{7},\39\T{1}+\T{6}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},%
+\39\T{8},\39\T{1}+\T{7}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{9},\39\T{1}+%
+\T{8}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{10},\39\T{1}+\T{9}*\T{5}+\T{1}%
+\},\39\{\T{0},\39{-}\T{1},\39\T{11},\39\T{1}+\T{10}*\T{5}+\T{1}\},\39\{\T{0},%
+\39{-}\T{1},\39\T{12},\39\T{1}+\T{11}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39%
+\T{13},\39\T{1}+\T{12}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{14},\39\T{1}+%
+\T{13}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{15},\39\T{1}+\T{14}*\T{5}+%
+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{16},\39\T{1}+\T{15}*\T{5}+\T{1}\},\39\{%
+\T{0},\39{-}\T{1},\39\T{17},\39\T{1}+\T{16}*\T{5}+\T{1}\},\39\{\T{0},\39{-}%
+\T{1},\39\T{18},\39\T{1}+\T{17}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{19},%
+\39\T{1}+\T{18}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{20},\39\T{1}+\T{19}*%
+\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{0},\39\T{0}+\T{1}*\T{5}+\T{1}\},\39\{%
+\T{0},\39\T{0},\39\T{1},\39\T{0}+\T{2}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39%
+\T{2},\39\T{0}+\T{3}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{3},\39\T{0}+\T{4}*%
+\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{4},\39\T{0}+\T{5}*\T{5}+\T{1}\},\39\{%
+\T{0},\39\T{0},\39\T{5},\39\T{0}+\T{6}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39%
+\T{6},\39\T{0}+\T{7}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{7},\39\T{0}+\T{8}*%
+\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{8},\39\T{0}+\T{9}*\T{5}+\T{1}\},\39\{%
+\T{0},\39\T{0},\39\T{9},\39\T{0}+\T{10}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39%
+\T{10},\39\T{0}+\T{11}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{11},\39\T{0}+%
+\T{12}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{12},\39\T{0}+\T{13}*\T{5}+\T{1}%
+\},\39\{\T{0},\39\T{0},\39\T{13},\39\T{0}+\T{14}*\T{5}+\T{1}\},\39\{\T{0},\39%
+\T{0},\39\T{14},\39\T{0}+\T{15}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{15},\39%
+\T{0}+\T{16}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{16},\39\T{0}+\T{17}*\T{5}+%
+\T{1}\},\39\{\T{0},\39\T{0},\39\T{17},\39\T{0}+\T{18}*\T{5}+\T{1}\},\39\{\T{0},%
+\39\T{0},\39\T{18},\39\T{0}+\T{19}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{19},%
+\39\T{0}+\T{20}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{20},\39\T{0}+\T{21}*%
+\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{0},\39\T{0}+\T{3}*\T{5}+\T{1}\},\39\{%
+\T{0},\39\T{1},\39\T{1},\39\T{0}+\T{4}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39%
+\T{2},\39\T{0}+\T{5}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{3},\39\T{0}+\T{6}*%
+\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{4},\39\T{0}+\T{7}*\T{5}+\T{1}\},\39\{%
+\T{0},\39\T{1},\39\T{5},\39\T{0}+\T{8}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39%
+\T{6},\39\T{0}+\T{9}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{7},\39\T{0}+%
+\T{10}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{8},\39\T{0}+\T{11}*\T{5}+\T{1}%
+\},\39\{\T{0},\39\T{1},\39\T{9},\39\T{0}+\T{12}*\T{5}+\T{1}\},\39\{\T{0},\39%
+\T{1},\39\T{10},\39\T{0}+\T{13}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{11},\39%
+\T{0}+\T{14}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{12},\39\T{0}+\T{15}*\T{5}+%
+\T{1}\},\39\{\T{0},\39\T{1},\39\T{13},\39\T{0}+\T{16}*\T{5}+\T{1}\},\39\{\T{0},%
+\39\T{1},\39\T{14},\39\T{0}+\T{17}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{15},%
+\39\T{0}+\T{18}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{16},\39\T{0}+\T{19}*%
+\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{17},\39\T{0}+\T{20}*\T{5}+\T{1}\},\},%
+\39\{\{\T{0},\39{-}\T{3},\39\T{5},\39\T{3}+\T{0}*\T{5}+\T{1}\},\39\{\T{0},%
+\39{-}\T{3},\39\T{6},\39\T{3}+\T{1}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39%
+\T{7},\39\T{3}+\T{2}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39\T{8},\39\T{3}+%
+\T{3}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39\T{9},\39\T{3}+\T{4}*\T{5}+\T{1}%
+\},\39\{\T{0},\39{-}\T{3},\39\T{20},\39\T{3}+\T{5}*\T{5}+\T{1}\},\39\{\T{0},%
+\39{-}\T{3},\39\T{21},\39\T{3}+\T{6}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39%
+\T{12},\39\T{3}+\T{7}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39\T{13},\39\T{3}+%
+\T{8}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39\T{14},\39\T{3}+\T{9}*\T{5}+\T{1}%
+\},\39\{\T{0},\39{-}\T{3},\39\T{15},\39\T{3}+\T{10}*\T{5}+\T{1}\},\39\{\T{0},%
+\39{-}\T{3},\39\T{16},\39\T{3}+\T{11}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39%
+\T{17},\39\T{3}+\T{12}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39\T{18},\39\T{3}+%
+\T{13}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{3},\39\T{19},\39\T{3}+\T{14}*\T{5}+%
+\T{1}\},\39\{\T{0},\39{-}\T{3},\39\T{20},\39\T{3}+\T{15}*\T{5}+\T{1}\},\39\{%
+\T{0},\39{-}\T{2},\39\T{3},\39\T{2}+\T{0}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},%
+\39\T{4},\39\T{2}+\T{1}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{5},\39\T{2}+%
+\T{2}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{6},\39\T{2}+\T{3}*\T{5}+\T{1}%
+\},\39\{\T{0},\39{-}\T{2},\39\T{7},\39\T{2}+\T{4}*\T{5}+\T{1}\},\39\{\T{0},%
+\39{-}\T{2},\39\T{8},\39\T{2}+\T{5}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39%
+\T{9},\39\T{2}+\T{6}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{10},\39\T{2}+%
+\T{7}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{11},\39\T{2}+\T{8}*\T{5}+\T{1}%
+\},\39\{\T{0},\39{-}\T{2},\39\T{12},\39\T{2}+\T{9}*\T{5}+\T{1}\},\39\{\T{0},%
+\39{-}\T{2},\39\T{13},\39\T{2}+\T{10}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39%
+\T{14},\39\T{2}+\T{11}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{15},\39\T{2}+%
+\T{12}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{16},\39\T{2}+\T{13}*\T{5}+%
+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{17},\39\T{2}+\T{14}*\T{5}+\T{1}\},\39\{%
+\T{0},\39{-}\T{2},\39\T{18},\39\T{2}+\T{15}*\T{5}+\T{1}\},\39\{\T{0},\39{-}%
+\T{2},\39\T{19},\39\T{2}+\T{16}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{2},\39\T{20},%
+\39\T{2}+\T{17}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{2},\39\T{1}+\T{0}*%
+\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{3},\39\T{1}+\T{1}*\T{5}+\T{1}\},\39%
+\{\T{0},\39{-}\T{1},\39\T{4},\39\T{1}+\T{2}*\T{5}+\T{1}\},\39\{\T{0},\39{-}%
+\T{1},\39\T{5},\39\T{1}+\T{3}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{6},\39%
+\T{1}+\T{4}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{7},\39\T{1}+\T{5}*\T{5}+%
+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{8},\39\T{1}+\T{6}*\T{5}+\T{1}\},\39\{%
+\T{0},\39{-}\T{1},\39\T{9},\39\T{1}+\T{7}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},%
+\39\T{10},\39\T{1}+\T{8}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{11},\39%
+\T{1}+\T{9}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{12},\39\T{1}+\T{10}*%
+\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{13},\39\T{1}+\T{11}*\T{5}+\T{1}\},%
+\39\{\T{0},\39{-}\T{1},\39\T{14},\39\T{1}+\T{12}*\T{5}+\T{1}\},\39\{\T{0},%
+\39{-}\T{1},\39\T{15},\39\T{1}+\T{13}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39%
+\T{16},\39\T{1}+\T{14}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{17},\39\T{1}+%
+\T{15}*\T{5}+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{18},\39\T{1}+\T{16}*\T{5}+%
+\T{1}\},\39\{\T{0},\39{-}\T{1},\39\T{19},\39\T{1}+\T{17}*\T{5}+\T{1}\},\39\{%
+\T{0},\39{-}\T{1},\39\T{20},\39\T{1}+\T{18}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},%
+\39\T{0},\39\T{0}+\T{0}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{1},\39\T{0}+%
+\T{1}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{2},\39\T{0}+\T{2}*\T{5}+\T{1}\},%
+\39\{\T{0},\39\T{0},\39\T{3},\39\T{0}+\T{3}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},%
+\39\T{4},\39\T{0}+\T{4}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{5},\39\T{0}+%
+\T{5}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{6},\39\T{0}+\T{6}*\T{5}+\T{1}\},%
+\39\{\T{0},\39\T{0},\39\T{7},\39\T{0}+\T{7}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},%
+\39\T{8},\39\T{0}+\T{8}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{9},\39\T{0}+%
+\T{9}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{10},\39\T{0}+\T{10}*\T{5}+\T{1}%
+\},\39\{\T{0},\39\T{0},\39\T{11},\39\T{0}+\T{11}*\T{5}+\T{1}\},\39\{\T{0},\39%
+\T{0},\39\T{12},\39\T{0}+\T{12}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{13},\39%
+\T{0}+\T{13}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{14},\39\T{0}+\T{14}*\T{5}+%
+\T{1}\},\39\{\T{0},\39\T{0},\39\T{15},\39\T{0}+\T{15}*\T{5}+\T{1}\},\39\{\T{0},%
+\39\T{0},\39\T{16},\39\T{0}+\T{16}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{17},%
+\39\T{0}+\T{17}*\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{18},\39\T{0}+\T{18}*%
+\T{5}+\T{1}\},\39\{\T{0},\39\T{0},\39\T{19},\39\T{0}+\T{19}*\T{5}+\T{1}\},\39\{%
+\T{0},\39\T{0},\39\T{20},\39\T{0}+\T{20}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39%
+\T{0},\39\T{0}+\T{2}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{1},\39\T{0}+\T{3}*%
+\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{2},\39\T{0}+\T{4}*\T{5}+\T{1}\},\39\{%
+\T{0},\39\T{1},\39\T{3},\39\T{0}+\T{5}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39%
+\T{4},\39\T{0}+\T{6}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{5},\39\T{0}+\T{7}*%
+\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{6},\39\T{0}+\T{8}*\T{5}+\T{1}\},\39\{%
+\T{0},\39\T{1},\39\T{7},\39\T{0}+\T{9}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39%
+\T{8},\39\T{0}+\T{10}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{9},\39\T{0}+%
+\T{11}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{10},\39\T{0}+\T{12}*\T{5}+\T{1}%
+\},\39\{\T{0},\39\T{1},\39\T{11},\39\T{0}+\T{13}*\T{5}+\T{1}\},\39\{\T{0},\39%
+\T{1},\39\T{12},\39\T{0}+\T{14}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{13},\39%
+\T{0}+\T{15}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{14},\39\T{0}+\T{16}*\T{5}+%
+\T{1}\},\39\{\T{0},\39\T{1},\39\T{15},\39\T{0}+\T{17}*\T{5}+\T{1}\},\39\{\T{0},%
+\39\T{1},\39\T{16},\39\T{0}+\T{18}*\T{5}+\T{1}\},\39\{\T{0},\39\T{1},\39\T{17},%
+\39\T{0}+\T{19}*\T{5}+\T{1}\},\},\},\}{}$;\par
+\fi
+
+\M{175}Just before `postponement', it was decided to switch to a painted
+backdrop,
+which would be compressed in the ROM and expanded into RAM for display in a
+conventional fashion.
+
+
+\fi
+
+\N{1}{176}Paths---The Player.  This is the code that controls the movement of
+the
+player or players through the path portion of \TT.  Since only one player can
+be active at a time, there is no player--player interaction or screen
+positioning compromises to deal with.  Basic movement is the same for both
+characters, and only differs for attacks and special movement.  (Of course all
+the animations are different, but the dynamics are the same.)
+
+\fi
+
+\M{177}This is the top-level player controller.  Everything gets done by way of
+the
+state machines, so this code is pretty simple.
+
+\Y\B\4\X177:Move the player\X${}\E{}$\6
+$\\{currentPlayer}\MG\\{fsmState}\K\\{fsm}(\\{currentPlayer}\MG%
+\\{fsmState}){}$;\par
+\U148.\fi
+
+\M{178}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{State} \\{MilesStand}[\,]${}\K\{{}$\6
+${}\{\\{CheckJumpNorth},\39\\{MilesJumpNorth},\39\\{PrepareMilesJumpNorth},\39%
+\T{0}\},{}$\6
+${}\{\\{CheckJumpSouth},\39\\{MilesJumpSouth},\39\\{PrepareMilesJumpSouth},\39%
+\T{0}\},{}$\6
+${}\{\\{CheckJumpWest},\39\\{MilesJumpWest},\39\\{PrepareMilesJumpWest},\39%
+\T{0}\},{}$\6
+${}\{\\{CheckJumpEast},\39\\{MilesJumpEast},\39\\{PrepareMilesJumpEast},\39%
+\T{0}\},{}$\6
+${}\{\\{TimeToYawn},\39\\{MilesYawn},\39\\{BumpCount},\39\T{0}\},{}$\6
+${}\{\\{True},\39\\{MilesStand},\39\\{BumpCount},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{MilesJumpEast}[\,]${}\K\{{}$\6
+${}\{\\{MilesLanded},\39\\{MilesCheckLandingEast},\39\\{MilesFinishJumpEast},%
+\39\.{FSM\_RERUN}\},{}$\6
+${}\{\\{True},\39\\{MilesJumpEast},\39\\{DoMilesJumpEast},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{MilesJumpWest}[\,]${}\K\{{}$\6
+${}\{\\{MilesLanded},\39\\{MilesCheckLandingWest},\39\\{MilesFinishJumpWest},%
+\39\.{FSM\_RERUN}\},{}$\6
+${}\{\\{True},\39\\{MilesJumpWest},\39\\{DoMilesJumpWest},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{MilesJumpNorth}[\,]${}\K\{{}$\6
+${}\{\\{MilesLanded},\39\\{MilesCheckLandingNorth},\39\\{MilesFinishJumpNorth},%
+\39\.{FSM\_RERUN}\},{}$\6
+${}\{\\{True},\39\\{MilesJumpNorth},\39\\{DoMilesJumpNorth},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{MilesJumpSouth}[\,]${}\K\{{}$\6
+${}\{\\{MilesLanded},\39\\{MilesCheckLandingSouth},\39\\{MilesFinishJumpSouth},%
+\39\.{FSM\_RERUN}\},{}$\6
+${}\{\\{True},\39\\{MilesJumpSouth},\39\\{DoMilesJumpSouth},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{MilesYawn}[\,]${}\K\{{}$\6
+${}\{\\{True},\39\\{MilesStand},\39\\{BumpCount},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{MilesCheckLandingEast}[\,]${}\K\{{}$\6
+${}\{\\{MilesNewSquareMissing},\39\\{MilesFall},\39\\{Null},\39\T{0}\},{}$\6
+${}\{\\{MilesNewSquareSlippery},\39\\{MilesSlideEast},\39\\{Null},\39\T{0}%
+\},{}$\6
+${}\{\\{True},\39\\{MilesStand},\39\\{Null},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{MilesCheckLandingWest}[\,]${}\K\{{}$\6
+${}\{\\{MilesNewSquareMissing},\39\\{MilesFall},\39\\{Null},\39\T{0}\},{}$\6
+${}\{\\{MilesNewSquareSlippery},\39\\{MilesSlideWest},\39\\{Null},\39\T{0}%
+\},{}$\6
+${}\{\\{True},\39\\{MilesStand},\39\\{Null},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{MilesCheckLandingNorth}[\,]${}\K\{{}$\6
+${}\{\\{MilesNewSquareMissing},\39\\{MilesFall},\39\\{Null},\39\T{0}\},{}$\6
+${}\{\\{MilesNewSquareSlippery},\39\\{MilesSlideNorth},\39\\{Null},\39\T{0}%
+\},{}$\6
+${}\{\\{True},\39\\{MilesStand},\39\\{Null},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{MilesCheckLandingSouth}[\,]${}\K\{{}$\6
+${}\{\\{MilesNewSquareMissing},\39\\{MilesFall},\39\\{Null},\39\T{0}\},{}$\6
+${}\{\\{MilesNewSquareSlippery},\39\\{MilesSlideSouth},\39\\{Null},\39\T{0}%
+\},{}$\6
+${}\{\\{True},\39\\{MilesStand},\39\\{Null},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{MilesFall}[\,]${}\K\{{}$\6
+${}\{\\{True},\39\\{MilesStand},\39\\{Null},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{MilesSlideWest}[\,]${}\K\{{}$\6
+${}\{\\{MilesSlideDone},\39\\{MilesCheckLandingWest},\39%
+\\{MilesFinishJumpWest},\39\T{1}\},{}$\6
+${}\{\\{True},\39\\{MilesSlideWest},\39\\{SlideMilesWest},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{MilesSlideEast}[\,]${}\K\{{}$\6
+${}\{\\{MilesSlideDone},\39\\{MilesCheckLandingEast},\39%
+\\{MilesFinishJumpEast},\39\T{1}\},{}$\6
+${}\{\\{True},\39\\{MilesSlideEast},\39\\{SlideMilesEast},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{MilesSlideNorth}[\,]${}\K\{{}$\6
+${}\{\\{MilesSlideDone},\39\\{MilesCheckLandingNorth},\39%
+\\{MilesFinishJumpNorth},\39\T{1}\},{}$\6
+${}\{\\{True},\39\\{MilesSlideNorth},\39\\{SlideMilesNorth},\39\T{0}\}{}$\6
+${}\}{}$;\7
+\&{State} \\{MilesSlideSouth}[\,]${}\K\{{}$\6
+${}\{\\{MilesSlideDone},\39\\{MilesCheckLandingSouth},\39%
+\\{MilesFinishJumpSouth},\39\T{1}\},{}$\6
+${}\{\\{True},\39\\{MilesSlideSouth},\39\\{SlideMilesSouth},\39\T{0}\}{}$\6
+${}\}{}$;\Y\par
+\fi
+
+\M{179}\B\X4:Function prototypes\X${}\mathrel+\E{}$\6
+\&{State} \\{MilesStand}[\,];\6
+\&{State} \\{MilesJumpEast}[\,];\6
+\&{State} \\{MilesJumpWest}[\,];\6
+\&{State} \\{MilesJumpNorth}[\,];\6
+\&{State} \\{MilesJumpSouth}[\,];\6
+\&{State} \\{MilesYawn}[\,];\6
+\&{State} \\{MilesCheckLandingEast}[\,];\6
+\&{State} \\{MilesCheckLandingWest}[\,];\6
+\&{State} \\{MilesCheckLandingNorth}[\,];\6
+\&{State} \\{MilesCheckLandingSouth}[\,];\6
+\&{State} \\{MilesFall}[\,];\6
+\&{State} \\{MilesSlideSouth}[\,];\6
+\&{State} \\{MilesSlideNorth}[\,];\6
+\&{State} \\{MilesSlideWest}[\,];\6
+\&{State} \\{MilesSlideEast}[\,];\7
+\&{void} \\{ClearCount}(\&{void});\6
+\&{void} \\{BumpCount}(\&{void});\6
+\&{void} \\{DoMilesJumpEast}(\&{void});\6
+\&{void} \\{DoMilesJumpWest}(\&{void});\6
+\&{void} \\{DoMilesJumpNorth}(\&{void});\6
+\&{void} \\{DoMilesJumpSouth}(\&{void});\6
+\&{void} \\{MilesFinishJumpEast}(\&{void});\6
+\&{void} \\{MilesFinishJumpWest}(\&{void});\6
+\&{void} \\{MilesFinishJumpNorth}(\&{void});\6
+\&{void} \\{MilesFinishJumpSouth}(\&{void});\6
+\&{void} \\{SlideMilesSouth}(\&{void});\6
+\&{void} \\{SlideMilesNorth}(\&{void});\6
+\&{void} \\{SlideMilesEast}(\&{void});\6
+\&{void} \\{SlideMilesWest}(\&{void});\6
+\&{void} \\{PrepareMilesJumpNorth}(\&{void});\6
+\&{void} \\{PrepareMilesJumpSouth}(\&{void});\6
+\&{void} \\{PrepareMilesJumpEast}(\&{void});\6
+\&{void} \\{PrepareMilesJumpWest}(\&{void});\7
+\&{int} \\{ControllerUp}(\&{void});\6
+\&{int} \\{ControllerDown}(\&{void});\6
+\&{int} \\{ControllerLeft}(\&{void});\6
+\&{int} \\{ControllerRight}(\&{void});\6
+\&{int} \\{TimeToYawn}(\&{void});\6
+\&{int} \\{MilesLanded}(\&{void});\6
+\&{int} \\{MilesNewSquareMissing}(\&{void});\6
+\&{int} \\{MilesNewSquareSlippery}(\&{void});\6
+\&{int} \\{MilesSlideDone}(\&{void});\par
+\fi
+
+\M{180}This routine clears a player's auxiliary counter.
+
+\Y\B\1\1\&{void} \\{ClearCount}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{currentPlayer}\MG\\{counter}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{yOffset}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{xOffset}\K\T{0};{}$\6
+\&{return};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{181}This routine increments a player's auxiliary counter.
+
+\Y\B\1\1\&{void} \\{BumpCount}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{currentPlayer}\MG\\{counter}\PP;{}$\6
+\&{return};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{182}These routines prepare for Miles' jump by initializing some values.
+
+\Y\B\1\1\&{void} \\{PrepareMilesJumpNorth}(\&{void})\2\2\6
+${}\{{}$\1\6
+\\{ClearCount}(\,);\6
+${}\\{currentPlayer}\MG\\{delta\_e}\K\\{pathMap}[\\{mapWidth}*\\{currentPlayer}%
+\MG\\{yPosition}+\\{currentPlayer}\MG\\{xPosition}].\\{elevation}-\\{pathMap}[%
+\\{mapWidth}*(\\{currentPlayer}\MG\\{yPosition}+\T{1})+\\{currentPlayer}\MG%
+\\{xPosition}].\\{elevation};{}$\6
+\4${}\}{}$\2\7
+\1\1\&{void} \\{PrepareMilesJumpSouth}(\&{void})\2\2\6
+${}\{{}$\1\6
+\\{ClearCount}(\,);\6
+${}\\{currentPlayer}\MG\\{delta\_e}\K\\{pathMap}[\\{mapWidth}*\\{currentPlayer}%
+\MG\\{yPosition}+\\{currentPlayer}\MG\\{xPosition}].\\{elevation}-\\{pathMap}[%
+\\{mapWidth}*(\\{currentPlayer}\MG\\{yPosition}-\T{1})+\\{currentPlayer}\MG%
+\\{xPosition}].\\{elevation};{}$\6
+\4${}\}{}$\2\7
+\1\1\&{void} \\{PrepareMilesJumpEast}(\&{void})\2\2\6
+${}\{{}$\1\6
+\\{ClearCount}(\,);\6
+${}\\{currentPlayer}\MG\\{delta\_e}\K\\{pathMap}[\\{mapWidth}*\\{currentPlayer}%
+\MG\\{yPosition}+\\{currentPlayer}\MG\\{xPosition}].\\{elevation}-\\{pathMap}[%
+\\{mapWidth}*\\{currentPlayer}\MG\\{yPosition}+\\{currentPlayer}\MG%
+\\{xPosition}+\T{1}].\\{elevation};{}$\6
+\4${}\}{}$\2\7
+\1\1\&{void} \\{PrepareMilesJumpWest}(\&{void})\2\2\6
+${}\{{}$\1\6
+\\{ClearCount}(\,);\6
+${}\\{currentPlayer}\MG\\{delta\_e}\K\\{pathMap}[\\{mapWidth}*\\{currentPlayer}%
+\MG\\{yPosition}+\\{currentPlayer}\MG\\{xPosition}].\\{elevation}-\\{pathMap}[%
+\\{mapWidth}*\\{currentPlayer}\MG\\{yPosition}+\\{currentPlayer}\MG%
+\\{xPosition}-\T{1}].\\{elevation};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{183}These routines manipulate Miles' display position to produce a proper
+jump
+trajectory.
+
+\Y\B\4\D$\\{MilesJumpYImpulse}$ \5
+$(\T{16}+\T{14}+\T{12}+\T{10}+\T{8}+\T{6}+\T{4}+\T{2}{}$)\par
+\Y\B\&{short} \\{jumpArc}[\,]${}\K\{\T{0},\39\T{\^0147},\39\T{\^07bb},\39\T{%
+\^0d1d},\39\T{\^116a},\39\T{\^14a4},\39\T{\^16ca},\39\T{\^17de},\39\T{\^17de},%
+\39\T{\^16ca},\39\T{\^14a4},\39\T{\^116a},\39\T{\^0d1d},\39\T{\^07bb},\39\T{%
+\^0147},\39\T{0}\};{}$\7
+\1\1\&{void} \\{DoMilesJumpEast}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{currentPlayer}\MG\\{xOffset}\MRL{+{\K}}\T{\^200};{}$\6
+${}\\{currentPlayer}\MG\\{yOffset}\K\\{jumpArc}[\\{currentPlayer}\MG%
+\\{counter}]-\\{currentPlayer}\MG\\{delta\_e}*\T{\^0080}*\\{currentPlayer}\MG%
+\\{counter};{}$\6
+${}\\{currentPlayer}\MG\\{counter}\PP;{}$\6
+\&{return};\6
+\4${}\}{}$\2\7
+\1\1\&{void} \\{DoMilesJumpWest}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{currentPlayer}\MG\\{xOffset}\MRL{-{\K}}\T{\^200};{}$\6
+${}\\{currentPlayer}\MG\\{yOffset}\K\\{jumpArc}[\\{currentPlayer}\MG%
+\\{counter}]-\\{currentPlayer}\MG\\{delta\_e}*\T{\^0080}*\\{currentPlayer}\MG%
+\\{counter};{}$\6
+${}\\{currentPlayer}\MG\\{counter}\PP;{}$\6
+\&{return};\6
+\4${}\}{}$\2\7
+\1\1\&{void} \\{DoMilesJumpNorth}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{currentPlayer}\MG\\{xOffset}\MRL{+{\K}}\T{\^080};{}$\6
+${}\\{currentPlayer}\MG\\{yOffset}\K\\{jumpArc}[\\{currentPlayer}\MG%
+\\{counter}]+(\T{\^100}-\\{currentPlayer}\MG\\{delta\_e}*\T{\^0080})*%
+\\{currentPlayer}\MG\\{counter};{}$\6
+${}\\{currentPlayer}\MG\\{counter}\PP;{}$\6
+\&{return};\6
+\4${}\}{}$\2\7
+\1\1\&{void} \\{DoMilesJumpSouth}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{currentPlayer}\MG\\{xOffset}\MRL{-{\K}}\T{\^080};{}$\6
+${}\\{currentPlayer}\MG\\{yOffset}\K\\{jumpArc}[\\{currentPlayer}\MG%
+\\{counter}]-(\T{\^100}+\\{currentPlayer}\MG\\{delta\_e}*\T{\^0080})*%
+\\{currentPlayer}\MG\\{counter};{}$\6
+${}\\{currentPlayer}\MG\\{counter}\PP;{}$\6
+\&{return};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{184}These routines do necessary cleanup after a jump.
+
+\Y\B\1\1\&{void} \\{MilesFinishJumpEast}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{currentPlayer}\MG\\{xPosition}\PP;{}$\6
+${}\\{currentPlayer}\MG\\{xOffset}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{yOffset}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{counter}\K\T{0};{}$\6
+${}\\{ActivateSquare}(\\{currentPlayer},\39\\{currentPlayer}\MG\\{xPosition},%
+\39\\{currentPlayer}\MG\\{yPosition});{}$\6
+\4${}\}{}$\2\7
+\1\1\&{void} \\{MilesFinishJumpWest}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{currentPlayer}\MG\\{xPosition}\MM;{}$\6
+${}\\{currentPlayer}\MG\\{xOffset}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{yOffset}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{counter}\K\T{0};{}$\6
+${}\\{ActivateSquare}(\\{currentPlayer},\39\\{currentPlayer}\MG\\{xPosition},%
+\39\\{currentPlayer}\MG\\{yPosition});{}$\6
+\4${}\}{}$\2\7
+\1\1\&{void} \\{MilesFinishJumpNorth}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{currentPlayer}\MG\\{yPosition}\PP;{}$\6
+${}\\{currentPlayer}\MG\\{xOffset}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{yOffset}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{counter}\K\T{0};{}$\6
+${}\\{ActivateSquare}(\\{currentPlayer},\39\\{currentPlayer}\MG\\{xPosition},%
+\39\\{currentPlayer}\MG\\{yPosition});{}$\6
+\4${}\}{}$\2\7
+\1\1\&{void} \\{MilesFinishJumpSouth}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{currentPlayer}\MG\\{yPosition}\MM;{}$\6
+${}\\{currentPlayer}\MG\\{yOffset}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{xOffset}\K\T{0};{}$\6
+${}\\{currentPlayer}\MG\\{counter}\K\T{0};{}$\6
+${}\\{ActivateSquare}(\\{currentPlayer},\39\\{currentPlayer}\MG\\{xPosition},%
+\39\\{currentPlayer}\MG\\{yPosition});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{185}These routines handle Miles' behavior on a slippery square
+
+\Y\B\1\1\&{void} \\{SlideMilesSouth}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{currentPlayer}\MG\\{xOffset}\MRL{-{\K}}\T{\^100};{}$\6
+${}\\{currentPlayer}\MG\\{yOffset}\K{-}\T{\^200}*\\{currentPlayer}\MG%
+\\{counter};{}$\6
+\4${}\}{}$\2\7
+\1\1\&{void} \\{SlideMilesNorth}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{currentPlayer}\MG\\{xOffset}\MRL{+{\K}}\T{\^100};{}$\6
+${}\\{currentPlayer}\MG\\{yOffset}\K\T{\^200}*\\{currentPlayer}\MG%
+\\{counter};{}$\6
+\4${}\}{}$\2\7
+\1\1\&{void} \\{SlideMilesEast}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{currentPlayer}\MG\\{xOffset}\MRL{+{\K}}\T{\^400};{}$\6
+\4${}\}{}$\2\7
+\1\1\&{void} \\{SlideMilesWest}(\,)\2\2\6
+${}\{{}$\1\6
+${}\\{currentPlayer}\MG\\{xOffset}\MRL{-{\K}}\T{\^400};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{186}This routine dete mines whether the player has requested a jump north,
+and if
+so, whether it is legal.
+
+\Y\B\1\1\&{int} \\{CheckJumpNorth}(\,)\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\R\\{ControllerUp}(\,)){}$\1\5
+\&{return} \.{FALSE};\2\6
+\&{if} ${}(\\{currentPlayer}\MG\\{yPosition}+\T{1}\G\\{currentPath}\MG%
+\\{ySize}){}$\1\5
+\&{return} \.{FALSE};\2\6
+\&{return} \.{TRUE};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{187}This routine determines whether the player has requested a jump south,
+and if
+so, whether it is legal.
+
+\Y\B\1\1\&{int} \\{CheckJumpSouth}(\,)\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\R\\{ControllerDown}(\,)){}$\1\5
+\&{return} \.{FALSE};\2\6
+\&{if} ${}(\\{currentPlayer}\MG\\{yPosition}\Z\T{0}){}$\1\5
+\&{return} \.{FALSE};\2\6
+\&{return} \.{TRUE};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{188}This routine determines whether the player has requested a jump east,
+and if
+so, whether it is legal.
+
+\Y\B\1\1\&{int} \\{CheckJumpEast}(\,)\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\R\\{ControllerRight}(\,)){}$\1\5
+\&{return} \.{FALSE};\2\6
+\&{if} ${}(\\{currentPlayer}\MG\\{xPosition}+\T{1}\G\\{currentPath}\MG%
+\\{xSize}){}$\1\5
+\&{return} \.{FALSE};\2\6
+\&{return} \.{TRUE};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{189}This routine determines whether the player has requested a jump west,
+and if
+so, whether it is legal.
+
+\Y\B\1\1\&{int} \\{CheckJumpWest}(\,)\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\R\\{ControllerLeft}(\,)){}$\1\5
+\&{return} \.{FALSE};\2\6
+\&{if} ${}(\\{currentPlayer}\MG\\{xPosition}\Z\T{0}){}$\1\5
+\&{return} \.{FALSE};\2\6
+\&{return} \.{TRUE};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{190}\B\X4:Function prototypes\X${}\mathrel+\E{}$\6
+\&{int} \\{CheckJumpWest}(\&{void});\6
+\&{int} \\{CheckJumpEast}(\&{void});\6
+\&{int} \\{CheckJumpSouth}(\&{void});\6
+\&{int} \\{CheckJumpNorth}(\&{void});\par
+\fi
+
+\M{191}This routine determines whether the controller is in the `up' position.
+
+\Y\B\1\1\&{int} \\{ControllerUp}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} \\{bStick1}${}\AND\.{JOYUP};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{192}This routine determines whether the controller is in the `down'
+position.
+
+\Y\B\1\1\&{int} \\{ControllerDown}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} \\{bStick1}${}\AND\.{JOYDOWN};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{193}This routine determines whether the controller is in the `left'
+position.
+
+\Y\B\1\1\&{int} \\{ControllerLeft}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} \\{bStick1}${}\AND\.{JOYLEFT};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{194}This routine determines whether the controller is in the `right'
+position.
+
+\Y\B\1\1\&{int} \\{ControllerRight}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} \\{bStick1}${}\AND\.{JOYRIGHT};{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{195}This routine determines whether Miles has been waiting long enough to
+yawn.
+
+\Y\B\4\D$\\{YawnTime}$ \5
+\T{300}\par
+\Y\B\1\1\&{int} \\{TimeToYawn}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} ${}(\\{currentPlayer}\MG\\{counter}\E\\{YawnTime});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{196}This routine determines whether Miles has landed after a jump.
+
+\Y\B\1\1\&{int} \\{MilesLanded}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} ${}(\\{currentPlayer}\MG\\{counter}>\T{15});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{197}this routine determines whether the square Miles landed in is missing.
+
+\Y\B\1\1\&{int} \\{MilesNewSquareMissing}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} ${}\R\\{pathMap}[\\{currentPlayer}\MG\\{yPosition}*\\{mapWidth}+%
+\\{currentPlayer}\MG\\{xPosition}].\\{type};{}$\6
+\4${}\}{}$\2\7
+\1\1\&{int} \\{MilesNewSquareSlippery}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} ${}(\\{pathMap}[\\{currentPlayer}\MG\\{yPosition}*\\{mapWidth}+%
+\\{currentPlayer}\MG\\{xPosition}].\\{type}\E\T{2});{}$\6
+\4${}\}{}$\2\7
+\1\1\&{int} \\{MilesSlideDone}(\,)\2\2\6
+${}\{{}$\1\6
+\&{return} ${}(\PP\\{currentPlayer}\MG\\{counter}>\T{7});{}$\6
+\4${}\}{}$\2\par
+\fi
+
+\M{198}We've been talking a lot about \PB{\\{currentPlayer}}, so I suppose I
+should define
+it.
+
+\Y\B\4\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{CreaturePtr} \\{currentPlayer};\6
+\&{Creature} \\{player1};\6
+\&{Creature} \\{player2};\par
+\fi
+
+\M{199}\B\X7:Initialize the game\X${}\mathrel+\E{}$\6
+$\\{currentPlayer}\K{\AND}\\{player1};{}$\6
+${}\\{player1}.\\{fsmState}\K\\{MilesStand}{}$;\par
+\fi
+
+\M{200}And here is the type
+
+\Y\B\4\X14:Typedef declarations\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} ${}\{{}$\1\6
+\&{StatePtr} \\{fsmState};\6
+\&{int} \\{xOffset};\6
+\&{int} \\{yOffset};\6
+\&{int} \\{counter};\6
+\&{short} \\{xPosition};\6
+\&{short} \\{yPosition};\6
+\&{unsigned} \&{short} ${}{*}\\{Frame};{}$\6
+\&{unsigned} \&{short} \\{chBase};\6
+\&{short} \\{anim\_time};\6
+\&{struct} \\{ans} ${}{*}\\{anim\_next};{}$\6
+\&{short} \\{behavior};\6
+\&{short} \\{type};\6
+\&{short} \\{delta\_e};\2\6
+${}\}{}$ \&{Creature}${},{}$ ${}{*}\&{CreaturePtr};$ $\I{}$\par
+\fi
+
+\N{1}{201}Paths---The Squares.  This is the code that controls the behavior of
+playfield squares and their interaction with the creatures that roam around on
+them.
+
+\fi
+
+\M{202}\B\X4:Function prototypes\X${}\mathrel+\E{}$\6
+\&{void} \\{UpdateSquares}(\&{void});\6
+\&{void} \\{ActivateSquare}(\&{CreaturePtr} \|c${},\39{}$\&{short} \|x${},%
+\39{}$\&{short} \|y);\par
+\fi
+
+\M{203}Here is the routine to call when a creature lands on a square.  Call it
+with
+a pointer to the creature involved and the coordinates of the square and it
+takes care of the rest.  (Well, you still have to call \PB{\\{UpdateSquares}(%
+\,)} to
+keep it going, but...)
+
+\Y\B\1\1\&{void} \\{ActivateSquare}(\&{CreaturePtr} \|c${},\39{}$\&{short} %
+\|x${},\39{}$\&{short} \|y)\2\2\6
+${}\{{}$\1\6
+\&{ActiveSquarePtr} \\{as};\7
+\X204:Allocate an active square record\X\6
+\X205:Fill up the active square record\X\6
+\X206:Perform the activated square's immediate behavior\X\6
+\&{if} (\\{as})\1\5
+\X207:Put the record into the active square list\X\2\6
+\4${}\}{}$\2\7
+\1\1\&{void} \\{UpdateSquares}(\,)\2\2\6
+${}\{\,\}{}$\par
+\fi
+
+\M{204}\B\X204:Allocate an active square record\X${}\E{}$\6
+$\\{as}\K\\{AllocMem}(\&{sizeof}(\&{ActiveSquare})){}$;\par
+\U203.\fi
+
+\M{205}\B\X205:Fill up the active square record\X${}\E{}$\6
+$\\{as}\MG\|x\K\|x;{}$\6
+${}\\{as}\MG\|y\K\|y;{}$\6
+${}\\{as}\MG\\{type}\K\\{pathMap}[\|y*\\{mapWidth}+\|x].\\{type};{}$\6
+${}\\{as}\MG\\{timer}\K\T{0}{}$;\par
+\U203.\fi
+
+\M{206}\B\X206:Perform the activated square's immediate behavior\X${}\E{}$\6
+\&{switch} ${}(\\{as}\MG\\{type}){}$\5
+${}\{{}$\1\6
+\4\&{case} \T{0}:\5
+\&{default}:\5
+\&{break};\6
+\4${}\}{}$\2\par
+\U203.\fi
+
+\M{207}\B\X207:Put the record into the active square list\X${}\E{}$\6
+$\\{as}\MG\\{next}\K\\{activeSquareList};{}$\6
+${}\\{as}\MG\\{prev}\K\NULL;{}$\6
+${}\\{activeSquareList}\MG\\{prev}\K\\{as};{}$\6
+${}\\{activeSquareList}\K\\{as}{}$;\par
+\U203.\fi
+
+\M{208}\B\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{ActiveSquarePtr} \\{activeSquareList};\par
+\fi
+
+\M{209}This is the structure for a square that is up to something
+
+\Y\B\4\X14:Typedef declarations\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{activs} ${}\{{}$\1\6
+\&{struct} \&{activs} ${}{*}\\{next};{}$\6
+\&{struct} \&{activs} ${}{*}\\{prev};{}$\6
+\&{short} \|x;\6
+\&{short} \|y;\6
+\&{short} \\{type};\6
+\&{short} \\{timer};\2\6
+${}\}{}$ \&{ActiveSquare}${},{}$ ${}{*}\&{ActiveSquarePtr};$ $\I{}$\par
+\fi
+
+\M{210}\B\X14:Typedef declarations\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{ans} ${}\{{}$\1\6
+\&{unsigned} \&{short} ${}{*}\\{frame};{}$\6
+\&{char} \\{time};\6
+\&{char} \\{flags};\6
+\&{struct} \&{ans} ${}{*}\\{next};{}$\2\6
+${}\}{}$ \&{AnimState}${},{}$ ${}{*}\&{AnimStatePtr}{}$;\par
+\fi
+
+\M{211}Here is a whole bunch of data concerning creature animation
+
+\Y\B\4\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{AnimState} \\{MilesStandEast}[\,]${}\K\{\{\\{milesshape},\39\T{10},\39\T{0},%
+\39{\AND}\\{MilesStandEast}[\T{0}]\},{}$\6
+${}\{\\{wierdmilesshape},\39\T{2},\39\T{0},\39{\AND}\\{MilesStandEast}[\T{0}]%
+\}{}$\6
+${}\}{}$;\7
+\&{unsigned} \&{long} ${}{*}\\{CompressedDataPointers}[\,]\K\{\NULL{}$\6
+${}\}{}$;\7
+\&{int} \\{CreatureShapeLength}[\,]${}\K\{{}$\T{0}\6
+${}\}{}$;\Y\par
+\fi
+
+\M{212}\B\1\1\&{void} \\{DoAnimFlags}(\&{char} \|f${},\39{}$\&{CreaturePtr} %
+\|t)\2\2\6
+${}\{{}$\1\6
+\&{AnimStatePtr} \|a;\7
+\&{switch} (\|f)\5
+${}\{{}$\1\6
+\4\&{case} \T{0}:\5
+\&{break};\6
+\4\&{default}:\5
+\&{break};\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{213}\B\1\1\&{void} \\{AnimateCreature}(\&{CreaturePtr} \|t)\2\2\6
+${}\{{}$\1\6
+\&{register} \&{AnimStatePtr} \|a;\7
+\&{if} ${}(\R(\|t\MG\\{anim\_time}\MM)){}$\5
+${}\{{}$\1\6
+${}\|a\K\|t\MG\\{anim\_next};{}$\6
+${}\|t\MG\\{anim\_time}\K\|a\MG\\{time};{}$\6
+${}\|t\MG\\{Frame}\K\|a\MG\\{frame};{}$\6
+${}\|t\MG\\{anim\_next}\K\|a\MG\\{next};{}$\6
+${}\\{DoAnimFlags}(\|a\MG\\{flags},\39\|t);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{214}This procedure decompresses a block of compressed data indexed by \PB{%
+\|a}
+(presumably a creature's graphics) and DMAs it to VDP location \PB{\|b}.  It
+uses an
+allocated intermediate decompression buffer.
+
+\Y\B\1\1\&{int} \\{LoadCreature}(\&{int} \|a${},\39{}$\&{int} \|b)\2\2\6
+${}\{{}$\1\6
+\&{if} ${}(\|a>\T{1}){}$\5
+${}\{{}$\1\6
+\&{unsigned} \&{char} ${}{*}\\{buffer}\K\\{AllocMem}(\\{CreatureShapeLength}[%
+\|a]*\T{32});{}$\7
+\\{ExpandLZ}((\&{unsigned} \&{char} ${}{*})\,\\{CompressedDataPointers}[\|a],%
+\39\\{buffer});{}$\6
+${}\\{SendBlock32}(\\{buffer},\39\|b,\39\\{CreatureShapeLength}[\|a]*%
+\T{32});{}$\6
+\\{WaitTOF}(\,);\6
+\\{FreeMem}(\\{buffer});\6
+\&{return} \\{CreatureShapeLength}[\|a];\6
+\4${}\}{}$\2\6
+\&{return} \T{0};\6
+\4${}\}{}$\2\par
+\fi
+
+\M{215}This routine draws a creature's sprites
+
+\Y\B\1\1\&{void} \\{DrawCreatures}(\&{CreaturePtr} \|c)\2\2\6
+${}\{{}$\1\6
+\&{short} \\{ty}${},\39\\{tx};{}$\6
+\&{short} \|n${},\39\|y;{}$\6
+\&{register} \&{short} ${}{*}\\{st};{}$\6
+\&{register} \&{SpriteDefPtr} \\{sp};\7
+${}\\{sp}\K{\AND}\\{spriteAttributes}[\\{sprite}];{}$\6
+\X218:Determine the shape's y position\X\6
+\&{if} ${}((\\{ty}>\T{32})\W(\\{ty}<\T{380})){}$\5
+${}\{{}$\1\6
+\X217:Determine the shape's x position\X\6
+\X219:Set up attributes for all the sprites in the shape\X\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{216}\B\X216:Terminate the sprite list\X${}\E{}$\6
+$\\{spriteAttributes}[\\{sprite}-\T{1}].\\{link}\K\T{0}{}$;\par
+\U147.\fi
+
+\M{217}\B\X217:Determine the shape's x position\X${}\E{}$\6
+$\\{tx}\K(\T{8}*(\|c\MG\\{xPosition}*\T{4}+\|c\MG\\{yPosition}))-%
+\\{screenScrollX}+\T{128};{}$\6
+${}\\{tx}\MRL{+{\K}}\|c\MG\\{xOffset}/\T{256};{}$\6
+\&{if} ${}(\|c\E\\{currentPlayer}){}$\1\5
+${}\\{playerX}\K\\{tx}{}$;\2\par
+\U215.\fi
+
+\M{218}\B\X218:Determine the shape's y position\X${}\E{}$\6
+$\\{ty}\K(\\{yMax}-(\T{2}*\|c\MG\\{yPosition}+\\{pathMap}[\\{mapWidth}*\|c\MG%
+\\{yPosition}+\|c\MG\\{xPosition}].\\{elevation}))*\T{8}-\\{screenScrollY}+%
+\T{135};{}$\6
+${}\\{ty}\MRL{-{\K}}\|c\MG\\{yOffset}/\T{256};{}$\6
+\&{if} ${}(\|c\E\\{currentPlayer}){}$\1\5
+${}\\{playerY}\K\\{ty}{}$;\2\par
+\U215.\fi
+
+\M{219}\B\X219:Set up attributes for all the sprites in the shape\X${}\E{}$\6
+$\|n\K\T{3};{}$\6
+${}\\{st}\K{}$(\&{short} ${}{*})\,\|c\MG\\{Frame};{}$\6
+${}\\{tx}\MRL{-{\K}}\\{st}[\T{1}]{}$;\C{ horizontal registration }\6
+${}\\{ty}\MRL{-{\K}}\\{st}[\T{2}]{}$;\C{ vertical registration }\6
+\&{for} ${}(\|y\K\T{0};{}$ ${}\|y<\\{st}[\T{0}];{}$ ${}\|y\PP){}$\5
+${}\{{}$\1\6
+${}\\{sp}\MG\\{vp}\K\\{ty}+\\{st}[\|n\PP];{}$\6
+${}\\{sp}\MG\\{size}\K\\{st}[\|n\PP];{}$\6
+${}\\{sp}\MG\\{cell}\K\|c\MG\\{chBase}+\\{st}[\|n\PP];{}$\6
+${}\\{sp}\MG\\{hp}\K\\{tx}+\\{st}[\|n\PP];{}$\6
+${}\\{sp}\MG\\{link}\K\\{sprite}+\T{1};{}$\6
+\&{if} ${}(\R(\\{sp}\MG\\{hp}\AND\T{\^1ff})){}$\1\5
+\&{continue};\C{ don't let it sit at 0 }\2\6
+${}\\{sprite}\PP;{}$\6
+${}\\{sp}\PP;{}$\6
+\4${}\}{}$\2\par
+\U215.\fi
+
+\M{220}\B\X4:Function prototypes\X${}\mathrel+\E{}$\6
+\&{void} \\{DrawCreatures}(\&{CreaturePtr} \|c);\6
+\&{void} \\{AnimateCreature}(\&{CreaturePtr} \|t);\par
+\fi
+
+\M{221}\B\X221:Data includes\X${}\E{}$\6
+\8\#\&{include} \.{"miles.h"}\6
+$\I{}$\par
+\A226.
+\U5.\fi
+
+\N{1}{222}The Art.  This group of sections defines data structures for the
+graphic art
+and includes the .h files that define the art.
+
+\fi
+
+\M{223}This structure defines an art set for a path or node.
+
+\Y\B\4\X14:Typedef declarations\X${}\mathrel+\E{}$\6
+\&{typedef} \&{struct} \&{art\_t} ${}\{{}$\1\6
+\&{short} ${}{*}\\{palette};{}$\6
+\&{unsigned} \&{long} ${}{*}\\{data};{}$\2\6
+${}\}{}$ \&{ArtSet}${},{}$ ${}{*}\&{ArtSetPtr}{}$;\par
+\fi
+
+\M{224}Here are a bunch of structures that tell us where our art is.
+
+\Y\B\4\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{ArtSet} \\{round1PathArt}${}\K\{\\{round1PathPalette},\39\\{round1CellData}%
+\}{}$;\par
+\fi
+
+\M{225}This is the palette for level 1 path play.
+
+\Y\B\4\X5:Global variables\X${}\mathrel+\E{}$\6
+\&{short} \\{round1PathPalette}[\,]${}\K\{\T{\^000},\39\T{\^488},\39\T{\^4c4},%
+\39\T{\^800},\39\T{\^a44},\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},%
+\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},%
+\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^444},\39\T{\^888},\39\T{\^aaa},%
+\39\T{\^eee},\39\T{\^008},\39\T{\^00e},\39\T{\^46a},\39\T{\^08e},\39\T{\^0ae},%
+\39\T{\^fff},\39\T{\^fff},\39\T{\^fff},\39\T{\^fff},\39\T{\^220},\39\T{\^000},%
+\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},%
+\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},%
+\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^eee},\39\T{\^000},%
+\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},%
+\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},\39\T{\^000},%
+\39\T{\^000},\}{}$;\par
+\fi
+
+\M{226}This is the cell data for level 1 path play.
+
+\Y\B\4\X221:Data includes\X${}\mathrel+\E{}$\6
+\8\#\&{include} \.{"l1path.h"}\6
+\8\#\&{include} \.{"digits.h"}\par
+\fi
+
+\M{227}\B\X4:Function prototypes\X${}\mathrel+\E{}$\6
+\&{ArtSet} \\{round1PathArt};\6
+\&{short} \\{round1PathPalette}[\,];\6
+\&{unsigned} \&{long} \\{round1CellData}[\,]; $\I{}$\par
+\fi
+
+\N{1}{228}Debugging---Display Routines.  Here are some routines to display data
+on the
+screen.  Numeric data is displayed using a font stored at location \PB{\T{%
+\^f000}} in
+the VDP, and in palette 3, color 1.
+
+\fi
+
+\M{229}This routine displays a \PB{\&{long}} at sprite location \PB{\|x}, \PB{%
+\|y}.
+
+\Y\B\1\1\&{void} \\{DisplayLong}(\&{long} \|n${},\39{}$\&{int} \|x${},\39{}$%
+\&{int} \|y)\2\2\6
+${}\{{}$\1\6
+\&{register} \&{SpriteDefPtr} \\{sp};\6
+\&{int} \|i;\7
+${}\\{sp}\K{\AND}\\{spriteAttributes}[\\{sprite}];{}$\6
+${}\|x\MRL{+{\K}}\T{64};{}$\6
+\&{for} ${}(\|i\K\T{8};{}$ ${}\|i>\T{0};{}$ ${}\|i\MM){}$\5
+${}\{{}$\1\6
+${}\\{sp}\MG\\{vp}\K\|y;{}$\6
+${}\\{sp}\MG\\{size}\K\T{0};{}$\6
+${}\\{sp}\MG\\{cell}\K\T{\^e780}+(\|n\AND\T{\^f});{}$\6
+${}\\{sp}\MG\\{hp}\K\|x;{}$\6
+${}\\{sp}\MG\\{link}\K\\{sprite}+\T{1};{}$\6
+${}\|n\MRL{{\GG}{\K}}\T{4};{}$\6
+${}\|x\MRL{-{\K}}\T{8};{}$\6
+\&{if} ${}(\R(\\{sp}\MG\\{hp}\AND\T{\^1ff})){}$\1\5
+\&{continue};\C{ don't let it sit at 0 }\2\6
+${}\\{sprite}\PP;{}$\6
+${}\\{sp}\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{230}This routine displays a \PB{\&{short}} at sprite location \PB{\|x}, \PB{%
+\|y}.
+
+\Y\B\1\1\&{void} \\{DisplayShort}(\&{short} \|n${},\39{}$\&{int} \|x${},\39{}$%
+\&{int} \|y)\2\2\6
+${}\{{}$\1\6
+\&{register} \&{SpriteDefPtr} \\{sp};\6
+\&{int} \|i;\7
+${}\\{sp}\K{\AND}\\{spriteAttributes}[\\{sprite}];{}$\6
+${}\|x\MRL{+{\K}}\T{32};{}$\6
+\&{for} ${}(\|i\K\T{4};{}$ ${}\|i>\T{0};{}$ ${}\|i\MM){}$\5
+${}\{{}$\1\6
+${}\\{sp}\MG\\{vp}\K\|y;{}$\6
+${}\\{sp}\MG\\{size}\K\T{0};{}$\6
+${}\\{sp}\MG\\{cell}\K\T{\^e780}+(\|n\AND\T{\^f});{}$\6
+${}\\{sp}\MG\\{hp}\K\|x;{}$\6
+${}\\{sp}\MG\\{link}\K\\{sprite}+\T{1};{}$\6
+${}\|n\MRL{{\GG}{\K}}\T{4};{}$\6
+${}\|x\MRL{-{\K}}\T{8};{}$\6
+\&{if} ${}(\R(\\{sp}\MG\\{hp}\AND\T{\^1ff})){}$\1\5
+\&{continue};\C{ don't let it sit at 0 }\2\6
+${}\\{sprite}\PP;{}$\6
+${}\\{sp}\PP;{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+\fi
+
+\M{231}\B\X4:Function prototypes\X${}\mathrel+\E{}$\6
+\&{void} \\{DisplayShort}(\&{short} \|n${},\39{}$\&{int} \|x${},\39{}$\&{int} %
+\|y);\6
+\&{void} \\{DisplayLong}(\&{long} \|n${},\39{}$\&{int} \|x${},\39{}$\&{int} %
+\|y);\6
+$\I{}$\par
+\fi
+
+\N{1}{232}Index.
+
+\fi
+
+\inx
+\fin
+\con

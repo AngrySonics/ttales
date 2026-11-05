@@ -1,0 +1,205 @@
+Comparing files PATH.W and PATH.OLD
+***** PATH.W
+int mapWidth;
+short rowOffsets[64];
+
+***** PATH.OLD
+int mapWidth;
+
+*****
+
+***** PATH.W
+  mapWidth = currentPath->xSize;
+  j = 0;
+  for(i = 0; i < currentPath->ySize; i++){
+    rowOffsets[i] = j;
+    j += mapWidth;
+  }
+  for(i = 13; i >= 0; i--)
+***** PATH.OLD
+  mapWidth = currentPath->xSize;
+  for(i = 13; i >= 0; i--)
+*****
+
+***** PATH.W
+    for(j = 0; j < 11; j++)@/
+      if(pathMap[SquareLocation(j, i)].type)
+        @<Draw a square at square coordinate $[j, i]$@>@;
+***** PATH.OLD
+    for(j = 0; j < 11; j++)@/
+      if(pathMap[i*mapWidth+j].type)
+        @<Draw a square at square coordinate $[j, i]$@>@;
+*****
+
+***** PATH.W
+@d yMax (4*32-1)
+@d SquareLocation(x, y) (rowOffsets[y] + x)
+
+@<Draw a square at square coordinate $[j, i]$@>=
+***** PATH.OLD
+@d yMax (4*32-1)
+@<Draw a square at square coordinate $[j, i]$@>=
+*****
+
+***** PATH.W
+  alpha = (j << 2) + i;
+  y += pathMap[SquareLocation(j, i)].elevation;
+  beta = yMax - y;
+***** PATH.OLD
+  alpha = (j << 2) + i;
+  y += pathMap[i*mapWidth+j].elevation;
+  beta = yMax - y;
+*****
+
+***** PATH.W
+  target = (((screenScrollY) >> 3) * 128) & 4095;
+  SendBlock32(&lineUpdateBufferA, target+FG, 128);
+  SendBlock32(&lineUpdateBufferB, target+BG, 128);
+}
+***** PATH.OLD
+  target = (((screenScrollY) >> 3) * 128) & 4095;
+  SendBlock16(&lineUpdateBufferA, target+FG, 128);
+  SendBlock16(&lineUpdateBufferB, target+BG, 128);
+}
+*****
+
+***** PATH.W
+  target = (((screenScrollY+232) >> 3) * 128) & 4095;
+  SendBlock32(&lineUpdateBufferA, target+FG, 128);
+  SendBlock32(&lineUpdateBufferB, target+BG, 128);
+}
+***** PATH.OLD
+  target = (((screenScrollY+232) >> 3) * 128) & 4095;
+  SendBlock16(&lineUpdateBufferA, target+FG, 128);
+  SendBlock16(&lineUpdateBufferB, target+BG, 128);
+}
+*****
+
+***** PATH.W
+    e = x - (4*j+i);
+    currentSquare = &pathMap[SquareLocation(j, i)];
+    if(z > currentSquare->elevation){
+***** PATH.OLD
+    e = x - (4*j+i);
+    currentSquare = &pathMap[i*mapWidth+j];
+    if(z > currentSquare->elevation){
+*****
+
+***** PATH.W
+      if(j == 0) continue;
+      if((z > pathMap[SquareLocation(j, i)-1].elevation) || (x-(4*(j-1)+i) > 4)){
+#if 1
+        if((z <= pathMap[SquareLocation(j-1, i+1)].elevation) && (x-(4*(j-1)+i+1) <= 4)){
+          j--;
+***** PATH.OLD
+      if(j == 0) continue;
+      if((z > pathMap[i*mapWidth+j-1].elevation) || (x-(4*(j-1)+i) > 4)){
+#if 1
+        if((z <= pathMap[(i+1)*mapWidth+j-1].elevation) && (x-(4*(j-1)+i+1) <= 4)){
+          j--;
+*****
+
+***** PATH.W
+          i++;
+          currentSquare = &pathMap[SquareLocation(j, i)];
+          if(!currentSquare->type) continue;
+***** PATH.OLD
+          i++;
+          currentSquare = &pathMap[i*mapWidth+j];
+          if(!currentSquare->type) continue;
+*****
+
+***** PATH.W
+        j--;
+        currentSquare = &pathMap[SquareLocation(j, i)];
+        e = x - (4*j+i);
+***** PATH.OLD
+        j--;
+        currentSquare = &pathMap[i*mapWidth+j];
+        e = x - (4*j+i);
+*****
+
+***** PATH.W
+  h = 1 - ((y - z) & 1);
+  h += pathMap[SquareLocation(j, i)].elevation - z;
+
+***** PATH.OLD
+  h = 1 - ((y - z) & 1);
+  h += pathMap[i*mapWidth+j].elevation - z;
+
+*****
+
+***** PATH.W
+@ @<Draw cell from this square@>=
+  if(pathMap[SquareLocation(j, i)].type && (i >= 0) && (j >= 0) &&
+                 (i < currentPath->ySize) && (j < mapWidth)){
+    short *pattern = l1cells[pathMap[SquareLocation(j, i)].type];
+    ch = pattern[1+h*5+e];
+***** PATH.OLD
+@ @<Draw cell from this square@>=
+  if(pathMap[i*mapWidth+j].type && (i >= 0) && (j >= 0) &&
+                 (i < currentPath->ySize) && (j < mapWidth)){
+    short *pattern = l1cells[pathMap[i*mapWidth+j].type];
+    ch = pattern[1+h*5+e];
+*****
+
+***** PATH.W
+
+    @<Determine the second square corresponding to the cell@>@;
+    @<Determine which line of the square to draw based on elevation@>@;
+    if(currentSquare->type && (i >= 0) &&
+                   (i < currentPath->ySize) && (j < mapWidth)){
+      if(h < l1cells[currentSquare->type][0]){
+        ch = l1cells[currentSquare->type][1+h*5+4];
+        ub = ch;
+***** PATH.OLD
+
+    @<Determine the square corresponding to the cell@>@;
+    @<Determine which line of the square to draw based on elevation@>@;
+    if(pathMap[i*mapWidth+j].type && (i >= 0) &&
+                   (i < currentPath->ySize) && (j < mapWidth)){
+      if(h < l1cells[pathMap[i*mapWidth+j].type][0]){
+        ch = l1cells[pathMap[i*mapWidth+j].type][1+h*5+5];
+        ub = ch;
+*****
+
+***** PATH.W
+
+@ @<Determine the second square corresponding to the cell@>=
+  if(z < 0) z = 0;
+  for(z = z + 1; z >= -11; z--){
+    j = (2 * x - y+1+z) >> 3;
+#if 0
+    if(j >= max_j) continue;
+#else
+    j--;
+#endif
+    i = (y - z) >> 1;
+    e = x - (4*j+i);
+    currentSquare = &pathMap[SquareLocation(j, i)];
+    if(z > currentSquare->elevation){
+      if(j == 0) continue;
+      if((z <= pathMap[SquareLocation(j, i+1)].elevation) && (x-(4*j+i+1) <= 4)){
+        j--;
+        i++;
+        currentSquare = &pathMap[SquareLocation(j, i)];
+        if(!currentSquare->type) continue;
+        e = x - (4*j+i);
+        if((i >= 0) && (j >= 0) && (i < currentPath->ySize))
+          break;
+      }
+      continue;
+    }
+    if(!currentSquare->type) continue;
+    if((i >= 0) && (j >= 0) && (i < currentPath->ySize)){
+      break;
+    }
+  }
+
+
+***** PATH.OLD
+
+
+*****
+
+
